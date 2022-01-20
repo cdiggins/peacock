@@ -173,6 +173,12 @@ public static class MoreExtensions
     public static T WithPreferredRect<T>(this T self, Rect r) where T : ComponentState
         => self with { Dimensions = self.Dimensions.WithPreferredRect(r) };
 
+    public static IComponent With(this IComponent self, ComponentState state)
+        => self.With(state, self.Children);
+
+    public static IComponent With(this IComponent self, Func<ComponentState, ComponentState> func)
+        => self.With(func(self.State));
+
     public static IComponent WithRect(this IComponent self, Rect r)
         => self.With(state => state.WithRect(r));
 
@@ -182,14 +188,18 @@ public static class MoreExtensions
     public static Rect ActualRect(this IComponent self)
         => self.State.Dimensions.Actual;
 
-    /*
-    public static IComponent<TState> With<TState>(this IComponent<TState> self, Func<TState, TState> update) 
-        where TState : ComponentState
-        => self.With(update(self.State));
-    */
-
-    public static TComponent With<TComponent, TState>(this TComponent self, Func<TState, TState> update)
-        where TComponent : IComponent<TState>
-        where TState : ComponentState
-        => (TComponent)self.With(update(self.State));
+    // NOTE: it is concievable that self derives from a type that is also in the type hierarchy of state,
+    // but this is too esoteric to deal with at the current time.
+    public static T Merge<T>(this T self, ComponentState state) where T : ComponentState
+        => state is T typedState ?
+        typedState
+        : self with
+        {
+            Active = state.Active,
+            Dimensions = state.Dimensions,
+            Enabled = state.Enabled,
+            Hovered = state.Hovered,
+            Visible = state.Visible,
+            Rendered = state.Rendered,
+        };
 }
