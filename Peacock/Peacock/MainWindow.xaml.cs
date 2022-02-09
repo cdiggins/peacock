@@ -1,94 +1,102 @@
 ﻿using System;
-using System.Threading.Tasks;
+using System.Diagnostics;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 
-namespace Peacock
+namespace Peacock;
+
+/// <summary>
+/// Interaction logic for MainWindow.xaml
+/// </summary>
+public partial class MainWindow : Window
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
-    public partial class MainWindow : Window
+    public DrawingGroup BackingStore = new DrawingGroup();
+    public DispatcherTimer Timer = new DispatcherTimer
     {
-        public DrawingGroup BackingStore = new DrawingGroup();
-        public DispatcherTimer Timer = new DispatcherTimer
-        {
-            Interval = TimeSpan.FromMilliseconds(13)
-        };
-        public DateTimeOffset Started;
+        Interval = TimeSpan.FromMilliseconds(13)
+    };
+    public DateTimeOffset Started;
 
-        public static ComponentFactory Factory;
-        public IWidget Widget = Theme.CreateWindow(800, 640, "My Window", Theme.CreateButton("Press me"));
-        public new static readonly Style Style = new Style();       
-        public WindowProps Props { get; set; }
-            
-        public MainWindow()
-        {
-            InitializeComponent();
-            KeyDown += (sender, args) => ProcessInput(new KeyDownEvent(args));
-            KeyUp += (sender, args) => ProcessInput(new KeyUpEvent(args));
-            MouseDoubleClick += (sender, args) => ProcessInput(new MouseDoubleClickEvent(args, args.GetPosition(this)));
-            MouseDown += (sender, args) => ProcessInput(new MouseDownEvent(args, args.GetPosition(this)));
-            MouseUp += (sender, args) => ProcessInput(new MouseUpEvent(args, args.GetPosition(this)));
-            MouseMove += (sender, args) => ProcessInput(new MouseMoveEvent(args, args.GetPosition(this)));
-            MouseWheel += (sender, args) => ProcessInput(new MouseWheelEvent(args, args.GetPosition(this)));
-            SizeChanged += (sender, args) => ProcessInput(new ResizeEvent(args));
+    public static ComponentFactory Factory = new ComponentFactory();
+    public IComponent Widget = Factory.Window(800, 640, "My Window", Factory.Grid(
+        Factory.Button("Press me"),
+        Factory.Button("Me too"),
+        Factory.Button("Not me"))
+        );
+    public new static readonly Style Style = new Style();
 
-            // Animation timer
-            Timer.Tick += Timer_Tick;
-            Timer.Start();
-            Started = DateTimeOffset.Now;
+    public MainWindow()
+    {
+        InitializeComponent();
+
+        KeyDown += (sender, args) => ProcessInput(new KeyDownEvent(args));
+        KeyUp += (sender, args) => ProcessInput(new KeyUpEvent(args));
+        MouseDoubleClick += (sender, args) => ProcessInput(new MouseDoubleClickEvent(args, args.GetScreenPosition(this)));
+        MouseDown += (sender, args) => ProcessInput(new MouseDownEvent(args, args.GetScreenPosition(this)));
+        MouseUp += (sender, args) => ProcessInput(new MouseUpEvent(args, args.GetScreenPosition(this)));
+        MouseMove += (sender, args) => ProcessInput(new MouseMoveEvent(args, args.GetScreenPosition(this)));
+        MouseWheel += (sender, args) => ProcessInput(new MouseWheelEvent(args, args.GetScreenPosition(this)));
+        SizeChanged += (sender, args) => ProcessInput(new ResizeEvent(args));
+
+        // Animation timer
+        Timer.Tick += Timer_Tick;
+        Timer.Start();
+        Started = DateTimeOffset.Now;
+
+        Debug.WriteLine(Widget.ToDebugString());
+    }
+
+    private void Timer_Tick(object? sender, EventArgs e)
+        => ProcessInput(new ClockEvent((DateTimeOffset.Now - Started).TotalSeconds));
+
+    public Rect RenderRect
+        => new(RenderSize);
+
+    public void ProcessInput<T>(T inputEvent)
+        where T : InputEvent
+    {
+        var aggregator = EventAggregator.Empty;
+        (var newWidget, aggregator) = Widget.ProcessInput(inputEvent, aggregator);
+        if (newWidget == null || newWidget.Equals(inputEvent))
+        {
+            return;
         }
-
-        private void Timer_Tick(object? sender, EventArgs e)
+        Widget = newWidget;
+        if (aggregator.GetEvents<DragStartEvent>().Any())
         {
-            var newWidget = Widget.Update(this.GetProps(), new ClockEvent((DateTimeOffset.Now - Started).TotalSeconds));
-            if (!newWidget.Equals(Widget))
-            {
-                Widget = newWidget;
-                Render();
-            }
+            Cursor = Cursors.Hand;
         }
-
-        // TODO: would be nice to make this async 
-        // https://stackoverflow.com/questions/23442543/using-async-await-with-dispatcher-begininvoke
-
-        public Rect RenderRect
-            => new(RenderSize);
-
-        public void ProcessInput<T>(T inputEvent)
-            where T : InputEvent
+        if (aggregator.GetEvents<DragEndEvent>().Any())
         {
-            Widget = Widget.Update(this.GetProps(), inputEvent);
-            Render();
-            InvalidateVisual();
+            Cursor = Cursors.Arrow;
         }
-
-        public ICanvas Draw(DrawingContext dc)
-            => Widget.Draw(new WpfRenderer(this.GetProps(), dc, RenderRect));
-
-        public void Render()
+        var e = aggregator.GetEvents<DragMoveEvent>().FirstOrDefault();
+        if (e != null)
         {
-            var drawingContext = BackingStore.Open();
-            var canvas = Draw(drawingContext);
-            drawingContext.Close();
-
-            // TODO: check that equals does return true, if the items are equivalent. 
-            if (!Props?.Equals(canvas.WindowProps) ?? false)
-            {
-                Cursor = Props.Cursor;
-                this.ApplyProps(Props);
-                Props = canvas.WindowProps;
-            }
+            Cursor = Cursors.Hand;
+            (Left, Top) = (e.Delta.X, e.Delta.Y);
         }
+        Render();
+        InvalidateVisual();
+    }
 
-        protected override void OnRender(DrawingContext drawingContext)
-        {
-            base.OnRender(drawingContext);
-            Render();
-            drawingContext.DrawDrawing(BackingStore);
-        }
+    public ICanvas Draw(DrawingContext dc)
+        => Widget.Draw(new WpfRenderer(dc).SetRect(RenderRect)).PopRect();
+
+    public void Render()
+    {
+        var drawingContext = BackingStore.Open();
+        var canvas = Draw(drawingContext);
+        drawingContext.Close();
+    }
+
+    protected override void OnRender(DrawingContext drawingContext)
+    {
+        base.OnRender(drawingContext);
+        Render();
+        drawingContext.DrawDrawing(BackingStore);
     }
 }

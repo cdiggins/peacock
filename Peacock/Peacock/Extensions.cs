@@ -7,31 +7,64 @@ using System.Windows.Input;
 
 namespace Peacock;
 
+public class Decorator : IComponentWrapper
+{
+    public Guid Id { get; } = Guid.NewGuid();
+
+    public Decorator(Func<IComponent, ICanvas, ICanvas> func)
+        => Func = func;
+
+    Func<IComponent, ICanvas, ICanvas> Func { get; }
+
+    public ICanvas Draw(IComponent wrappedComponent, ICanvas canvas)
+        => Func(wrappedComponent, canvas);
+
+    public (IComponent, IComponentWrapper?, IEventAggregator) ProcessInput(IComponent wrappedComponent, IInputEvent input, IEventAggregator handler)
+        => (wrappedComponent, this, handler);
+}
+
+public class Behavior : IComponentWrapper
+{
+    public Guid Id { get; }
+
+    public Behavior(Func<IComponent, IInputEvent, IEventAggregator, (IComponent, IComponentWrapper?, IEventAggregator)> func)
+        => Func = func;
+
+    Func<IComponent, IInputEvent, IEventAggregator, (IComponent, IComponentWrapper?, IEventAggregator)> Func { get; }
+
+    public ICanvas Draw(IComponent wrappedComponent, ICanvas canvas)
+        => canvas;
+
+    public (IComponent, IComponentWrapper?, IEventAggregator) ProcessInput(IComponent wrappedComponent, IInputEvent input, IEventAggregator handler)
+        => Func(wrappedComponent, input, handler);
+}
+
+public class OnInputBehavior<T> : IComponentWrapper
+    where T: InputEvent
+{
+    public Guid Id { get; } = Guid.NewGuid();
+
+    public OnInputBehavior(Func<IComponent, T, IComponent> func)
+        => Func = func;
+
+    Func<IComponent, T, IComponent> Func { get; }
+
+    public ICanvas Draw(IComponent wrappedComponent, ICanvas canvas)
+        => canvas;
+
+    public (IComponent, IComponentWrapper?, IEventAggregator) ProcessInput(IComponent wrappedComponent, IInputEvent input, IEventAggregator handler)
+    {
+        var r = wrappedComponent;
+        if (input is T typedInput)
+        {
+            r = Func(wrappedComponent, typedInput);
+        }
+        return (r, this, handler);
+    }
+}
+
 public static class MoreExtensions
 {
-    public static Rect Subdivide(this Rect r, int i, int cnt)
-    {
-        Debug.Assert(r.Width >= 0);
-        Debug.Assert(r.Height >= 0);
-        Debug.Assert(i < cnt);
-        var side = (int)Math.Ceiling(Math.Sqrt(cnt));
-        if (side <= 0)
-            return Rect.Empty;
-        var row = i / side;
-        var col = i % side;
-        var width = r.Width / side;
-        var height = r.Height / side;
-        Debug.Assert(width <= r.Width);
-        Debug.Assert(height <= r.Height);
-        var left = r.Width * col / side + r.Left;
-        var top = r.Height * row / side + r.Top;
-        Debug.Assert(left >= 0);
-        Debug.Assert(top >= 0);
-        Debug.Assert(left + width <= r.Right);
-        Debug.Assert(top + height <= r.Bottom);
-        return new Rect(left, top, width, height);
-    }
-
     public static Rect Shrink(this Rect r, Rect padding)
         => r.Shrink(padding.Left, padding.Top, padding.Right, padding.Bottom);
 
@@ -62,15 +95,33 @@ public static class MoreExtensions
     public static ICanvas DrawRoundedRect(this ICanvas canvas, IBrush brush, Rect rect, double radiusX, double radiusY)
         => canvas.DrawRoundedRect(brush, null, rect, radiusX, radiusY);
 
+    public static IEnumerable<IComponent> Arrange(this IEnumerable<IComponent> components, IEnumerable<Rect> rects)
+        => components.Zip(rects, (c, r) => c.WithRect(r));
+
     /*
     public static IWindow SetPos(this IWindow window, Point pos)
         => window.SetRect(new Rect(pos, window.Rect.Size));
     */
 
-    public static IEnumerable<IComponent> ComputeStackLayout(this Rect rect, IEnumerable<IComponent> components, bool horizontalOrVertical = false, bool reverse = false)
-        => components.Zip(rect.ComputeStackLayout(
-            components.Select(w => w.PreferredRect()).ToList(), horizontalOrVertical, reverse),
-            (w, r) => w.WithRect(r));
+    public static Rect GetRow(this Rect r, int row, int rowCount)
+        => new(r.Left, r.Top + r.Height * row / rowCount, r.Width, r.Height / rowCount);
+
+    public static Rect GetColumn(this Rect r, int col, int colCount)
+        => new(r.Left + r.Width * col / colCount, r.Top, r.Width / colCount, r.Bottom);
+
+    public static Rect GetRowColumn(this Rect r, int row, int col, int rowCount, int colCount)
+        => r.GetRow(row, rowCount).GetColumn(col, colCount);
+
+    public static IEnumerable<Rect> GetGrid(this Rect r, int rowCount, int colCount)
+        => Enumerable.Range(0, rowCount * colCount).Select(i => r.GetRowColumn(i / colCount, i % colCount, rowCount, colCount));
+
+    public static IEnumerable<IComponent> ArrangeGrid(this IReadOnlyList<IComponent> components, Rect rect)
+        => components.Arrange(rect.GetGrid(
+            (int)Math.Ceiling(Math.Sqrt(components.Count)), 
+            (int)Math.Ceiling(Math.Sqrt(components.Count))));
+
+    public static IEnumerable<IComponent> ArrangeStack(this Rect rect, IEnumerable<IComponent> components, bool horizontalOrVertical = false, bool reverse = false)
+        => components.Arrange(rect.ComputeStackLayout(components.Select(w => w.State.Rect).ToList(), horizontalOrVertical, reverse));
 
     public static IEnumerable<Rect> ComputeStackLayout(this Rect rect, IReadOnlyList<Rect> children, bool horizontalOrVertical = false, bool reverse = false)
         => horizontalOrVertical
@@ -114,7 +165,8 @@ public static class MoreExtensions
     }
 
     public static Rect GetRect(this Window window)
-        => new(window.Left, window.Top, window.Width, window.Height);
+        //=> new(window.Left, window.Top, window.Width, window.Height);
+        => new(0, 0, window.Width, window.Height);
 
     public static WindowProps GetProps(this Window window)
         => new(window.GetRect(), window.Title, window.Cursor);
@@ -137,6 +189,7 @@ public static class MoreExtensions
     public static Window ApplyProps(this Window window, WindowProps props)
         => window.ApplyRect(props.Rect).ApplyCursor(props.Cursor).ApplyTitle(props.Title);
 
+    /*
     public static ICanvas SetWindowTitle(this ICanvas canvas, string text)
         => canvas.SetWindowProps(canvas.WindowProps with { Title = text });
 
@@ -145,9 +198,13 @@ public static class MoreExtensions
 
     public static ICanvas SetWindowRect(this ICanvas canvas, Rect rect)
        => canvas.SetWindowProps(canvas.WindowProps with { Rect = rect });
+    */
 
     public static Rect Resize(this Rect rect, Size size)
         => new(rect.Location, size);
+
+    public static Rect Move(this Rect rect, Point point)
+        => new(point, rect.Size);
 
     public static Point Offset(this Point self, Point point)
         => new(self.X + point.X, self.Y + point.Y);
@@ -155,51 +212,123 @@ public static class MoreExtensions
     public static Rect Offset(this Rect rect, Point point)
         => new(rect.Location.Offset(point), rect.Size);
 
-    public static Dimensions Resize(this Dimensions dimensions, Size size)
-        => dimensions.WithRect(dimensions.Actual.Resize(size));
+    public static IComponent With(this IComponent self, IState state)
+        => self.With(state, self.Children, self.Wrappers);
 
-    public static Dimensions Offset(this Dimensions dimensions, Point point)
-        => dimensions.WithRect(dimensions.Actual.Offset(point));
-
-    public static Dimensions WithRect(this Dimensions dimensions, Rect rect)
-        => dimensions with { Actual = rect };
-
-    public static Dimensions WithPreferredRect(this Dimensions dimensions, Rect rect)
-        => dimensions with { Preferred = rect };
-
-    public static T WithRect<T>(this T self, Rect r) where T : ComponentState
-        => self with { Dimensions = self.Dimensions.WithRect(r) };
-
-    public static T WithPreferredRect<T>(this T self, Rect r) where T : ComponentState
-        => self with { Dimensions = self.Dimensions.WithPreferredRect(r) };
-
-    public static IComponent With(this IComponent self, ComponentState state)
-        => self.With(state, self.Children);
-
-    public static IComponent With(this IComponent self, Func<ComponentState, ComponentState> func)
+    public static IComponent With(this IComponent self, Func<IState, IState> func)
         => self.With(func(self.State));
 
-    public static IComponent WithRect(this IComponent self, Rect r)
-        => self.With(state => state.WithRect(r));
+    public static IComponent WithRect(this IComponent self, Rect rect)
+        => self.With(self.State.WithRect(rect));
 
-    public static Rect PreferredRect(this IComponent self)
-        => self.State.Dimensions.Preferred;
+    public static T WithRect<T>(this T self, Rect rect)
+        where T : ComponentState    
+        => self with { Rect = rect };
+        
+    public static string ToDebugString(this IComponent self, string indent = "")
+        => $"{indent}{self.GetType().Name} {self.State.Rect} [\n{string.Join(",\n", self.Children.Select(x => x.ToDebugString(indent + "  ")))}\n{indent}]";
 
-    public static Rect ActualRect(this IComponent self)
-        => self.State.Dimensions.Actual;
+    /*
+    public static Component<TComponent, TState> OnMouseDown<TComponent, TState>(this Component<TComponent, TState> self, Action<MouseDownEvent> mde)
+        => self with { Funcs = self.Funcs with { OnInput = (x, y) => mde(x,)} }
+    */
 
-    // NOTE: it is concievable that self derives from a type that is also in the type hierarchy of state,
-    // but this is too esoteric to deal with at the current time.
-    public static T Merge<T>(this T self, ComponentState state) where T : ComponentState
-        => state is T typedState ?
-        typedState
-        : self with
+    public static IComponent AddWrapper(this IComponent component, IComponentWrapper wrapper)
+        => component.With(component.State, component.Children, component.Wrappers.Append(wrapper).ToList());
+
+    public static IComponent OnInput<T>(this IComponent component, Func<IComponent, T, IComponent> f)
+        where T : InputEvent
+        => component.AddWrapper(new OnInputBehavior<T>(f));
+
+    public static IComponent WithStyle(this IComponent component, Style style)
+        => component.With(state => ((StyledState)state) with { Style = style });
+
+    public static Style GetStyle(this IComponent component)
+        => ((StyledState)component.State).Style;
+
+    public static IComponent WithStyle(this IComponent component, Func<Style, Style> func)
+        => component.WithStyle(func(component.GetStyle()));
+
+    public static IComponent WithState(this IComponent component, Func<IState, IState> func)
+        => component.WithState(func(component.State));
+
+    public static IComponent WithState(this IComponent component, IState state)
+        => component.With(state, component.Children, component.Wrappers);
+
+    public static Point Subtract(this Point self, Point point)
+        => new(self.X - point.X, self.Y - point.Y);
+
+    public static IComponent AddDraggable(this IComponent self)
+        => self.AddWrapper(new DraggableDecorator());
+
+    public static IEnumerable<T> GetEvents<T>(this IEventAggregator e)
+        where T : IComponentEvent
+        => e.Events.Select(x => x.Item2).OfType<T>();
+
+    public static Point GetScreenPosition(this MouseEventArgs args, Window window)
+        => window.PointToScreen(args.GetPosition(window));
+
+    public static double HalfHeight(this Rect rect)
+        => rect.Top + rect.Size.HalfHeight();
+
+    public static double HalfHeight(this Size size)
+        => size.Height / 2.0;
+
+    public static double HalfWidth(this Rect rect)
+        => rect.Top + rect.Size.HalfWidth();
+
+    public static double HalfWidth(this Size size)
+        => size.Width / 2.0;
+
+    public static Point Center(this Rect r)
+        => new(r.Left + r.HalfWidth(), r.Top + r.HalfHeight());
+
+    public static Size Half(this Size size)
+        => new(size.HalfWidth(), size.HalfHeight());
+
+    public static Point Subtract(this Point p, Size size)
+        => new(p.X - size.Width, p.Y - size.Width);
+
+    public static Point CenterTopLeftOfSubarea(this Rect rect, Size size)
+        => rect.Center().Subtract(size.Half());
+
+    public static Point AlignedTopLeftOfSubarea(this Rect rect, Size size, Alignment alignment)
+    {
+        var center = rect.CenterTopLeftOfSubarea(size);
+        var right = rect.Right - size.Width;
+        var bottom = rect.Bottom - size.Height;
+        var left = rect.Left;
+        var top = rect.Top;
+
+        switch (alignment)
         {
-            Active = state.Active,
-            Dimensions = state.Dimensions,
-            Enabled = state.Enabled,
-            Hovered = state.Hovered,
-            Visible = state.Visible,
-            Rendered = state.Rendered,
-        };
+            case Alignment.TopCenter:
+                return new(center.X, top);
+            case Alignment.TopRight:
+                return new(right, top);
+            case Alignment.CenterLeft:
+                return new(left, center.Y);
+            case Alignment.CenterCenter:
+                return center;
+            case Alignment.CenterRight:
+                return new(right, center.Y);
+            case Alignment.BottomLeft:
+                return new(left, bottom);
+            case Alignment.BottomCenter:
+                return new(center.X, bottom);
+            case Alignment.BottomRight:
+                return new(right, bottom);           
+            case Alignment.None:
+            case Alignment.TopLeft:
+            default:
+                return rect.TopLeft;
+        }
+    }
+
+    public static bool NonZero(this Rect self)
+        => self.Width > 0 && self.Height > 0;
+
+    public static bool NonZeroRect(this IComponent self)
+        => self.State.Rect.NonZero();
 }
+    

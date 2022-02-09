@@ -12,19 +12,23 @@ namespace Peacock
     {
         public DrawingContext Context { get; init; }
 
-        public WpfRenderer(WindowProps props, DrawingContext context, Rect rect)
+        public WpfRenderer(DrawingContext context)
         {
-            WindowProps = props;
             Context = context;
-            Rect = rect;
-            Context.PushTransform(new TranslateTransform(rect.Left, rect.Top));
-            Context.PushClip(new RectangleGeometry(new Rect(rect.Size)));
         }
 
-        public void Dispose()
+        public ICanvas SetRect(Rect rect)
+        { 
+            Context.PushTransform(new TranslateTransform(rect.Left, rect.Top));
+            Context.PushClip(new RectangleGeometry(new Rect(rect.Size)));
+            return this;
+        }
+
+        public ICanvas PopRect()
         {
             Context.Pop();
             Context.Pop();
+            return this;
         }
 
         public class CanvasBrush : IBrush
@@ -58,6 +62,12 @@ namespace Peacock
             return this;
         }
 
+        public Typeface GetTypeface(IFont font)
+            => new (((CanvasFont)font).FontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
+
+        public FormattedText GetFormattedText(IFont font, IBrush brush, string text)
+            => new (text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, GetTypeface(font), ((CanvasFont)font).Size, ((CanvasBrush) brush).Brush, new NumberSubstitution(), 1.0); 
+
         // var dpiInfo = VisualTreeHelper.GetDpi(visual);
         // From <https://stackoverflow.com/questions/58343299/formattedtext-and-pixelsperdip-if-application-is-scaled-independently-of-dpi> 
         // TODO: handle DPI properly
@@ -65,9 +75,7 @@ namespace Peacock
 
         public ICanvas DrawText(IFont font, IBrush brush, Point point, string text)
         {
-            var localFont = (CanvasFont)font;
-            var typeFace = new Typeface(localFont.FontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
-            var formattedText = new FormattedText(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, typeFace, localFont.Size, ((CanvasBrush)brush).Brush, new NumberSubstitution(), 1.0);
+            var formattedText = GetFormattedText(font, brush, text);
             Context.DrawText(formattedText, point);
             return this;
         }
@@ -94,12 +102,10 @@ namespace Peacock
 
         public Rect Rect { get; init; }
 
-        public ICanvas SetRect(Rect rect)
-            => new WpfRenderer(WindowProps, Context, Rect);        
-
-        public WindowProps WindowProps { get; init; }
-
-        public ICanvas SetWindowProps(WindowProps props)
-           => this with { WindowProps = props };
+        public Size MeasureString(IFont font, IBrush brush, string text)
+        {
+            var t = GetFormattedText(font, brush, text);
+            return new Size(t.Width, t.Height);
+        }
     }
 }

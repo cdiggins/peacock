@@ -19,7 +19,7 @@ namespace Peacock
     {
     }
 
-    public interface ICanvas : IDisposable
+    public interface ICanvas
     {
         IBrush CreateBrush(Color color);
         IPen CreatePen(Color color, double width = 1.0);
@@ -31,9 +31,9 @@ namespace Peacock
         ICanvas DrawRect(IBrush? brush, IPen? pen, Rect rect);
         ICanvas DrawRoundedRect(IBrush? brush, IPen? pen, Rect rect, double radiusX, double radiusY);
 
-        WindowProps WindowProps { get; }
-        ICanvas SetWindowProps(WindowProps props);
+        Size MeasureString(IFont font, IBrush brush, string text);
 
         ICanvas SetRect(Rect rect);
+        ICanvas PopRect();
     }
 }

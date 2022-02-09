@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 
@@ -20,84 +19,6 @@ public class DataSource<T> : IDataSource
     
     public void AddBinding<TComponent, TProps>(TComponent component, Func<T, TProps> fromModelFunc, Func<T, TProps, T>? toModelFunc = null)
         => throw new NotImplementedException();
-}
-
-// This identifies type that contain input event data
-// This could be generated from the Window system or from parent component 
-public interface IInputEvent
-{ }
-
-// This an abstraction representing a component. 
-public interface IComponent
-{
-    ComponentState State { get; }
-    IReadOnlyList<IComponent> Children { get; }
-    IComponent FromModel(IDataSource model);
-    IDataSource ToModel(IDataSource model);
-    ICanvas Draw(ICanvas canvas);
-    IComponent ProcessInput(IInputEvent input);
-    IComponent With(ComponentState state, IEnumerable<IComponent>? children);
-}
-
-// Represent one or two way binding from an arbitrary data-source to a state.
-public record Binding<TState>
-{
-    public Func<IDataSource, TState>? FromModel { get; init; }
-    public Func<IDataSource, TState, IDataSource>? ToModel { get; init; }
-}
-
-public record ComponentFuncs<TState>
-{
-    public Func<TState, ICanvas, ICanvas>? OnDraw { get; init; }
-    public Func<TState, IInputEvent, TState>? OnInput { get; init; }
-}
-
-public abstract record Component<TComponent, TState> : IComponent
-    where TState : ComponentState
-    where TComponent : Component<TComponent, TState>    
-{
-    public abstract TComponent With(TState state, IEnumerable<IComponent>? children);
-
-    IComponent IComponent.With(ComponentState state, IEnumerable<IComponent>? children)
-        => With(State.Merge(state), children);
-
-    protected Component(TState state, IEnumerable<IComponent>? children = null)
-        => (State, Children) = (state, children?.ToArray() ?? Array.Empty<IComponent>());
-
-    // The state can only be changed through the constructor (or the "with" function)
-    public TState State { get; }
-
-    // If the binding or funcs change, this does not affect the construction of the widget, so 
-    public Binding<TState>? Binding { get; init; }
-    public ComponentFuncs<TState>? Funcs { get; init; }
-
-    // Just to make this compatible with IComponent
-    ComponentState IComponent.State => State;
-
-    public TState BindingFromModel(IDataSource source) 
-        => Binding?.FromModel?.Invoke(source) ?? State;
-
-    public IDataSource BindingToModel(IDataSource source, TState state) 
-        => Binding?.ToModel?.Invoke(source, state) ?? source;
-
-    public IComponent FromModel(IDataSource model)
-        => With(BindingFromModel(model), Children?.Select(c => c.FromModel(model)));
-
-    public IDataSource ToModel(IDataSource model)
-        => Children.Aggregate(BindingToModel(model, State), (model, child) => child.ToModel(model));
-
-    public virtual ICanvas Draw(ICanvas canvas)
-        => Funcs?.OnDraw?.Invoke(State, canvas) ?? canvas;
-
-    public virtual IComponent ProcessInput(IInputEvent input)
-    {
-        var newChildren = Children?.Select(c => c.ProcessInput(input));
-        var newState = Funcs?.OnInput?.Invoke(State, input) ?? State;
-        return With(newState, newChildren);
-    }
-
-    public IReadOnlyList<IComponent> Children { get; init; } 
-        = Array.Empty<IComponent>();
 }
 
 public enum Alignment
@@ -141,22 +62,42 @@ public record Dimensions
     public Rect Minimum { get; init; } = Rect.Empty;
     public Rect Maximum { get; init; } = Constants.Max;
     public Rect Preferred { get; init; } = Constants.Default;
+    public Rect Initial { get; init; } = Constants.Default;
     public Rect Actual { get; init; } = Constants.Default;
 }
 
-public record ComponentState
+public interface IState
 {
-    public Guid Id { get; init; } 
-        = Guid.NewGuid();
+    bool Enabled { get; }
+    bool Active { get; }
+    bool Visible { get; }
+    bool Hovered { get; }
+    bool Rendered { get; }
+    Rect Rect { get; }
 
+    IState WithEnabled(bool enabled);
+    IState WithActive(bool active);
+    IState WithVisible(bool visible);
+    IState WithHovered(bool hovered);
+    IState WithRendered(bool rendered);
+    IState WithRect(Rect rect);
+}
+
+public record ComponentState : IState
+{
     public bool Enabled { get; init; }
     public bool Active { get; init; }
     public bool Visible { get; init; }
     public bool Hovered { get; init; }
     public bool Rendered { get; init; }
+    public Rect Rect { get; init; }
 
-    public Dimensions Dimensions { get; init; } 
-        = new Dimensions();    
+    public IState WithEnabled(bool enabled) => this with { Enabled = enabled };
+    public IState WithActive(bool active) => this with { Active = active };
+    public IState WithVisible(bool visible) => this with { Visible = visible };
+    public IState WithHovered(bool hovered) => this with { Hovered = hovered };
+    public IState WithRendered(bool rendered) => this with { Rendered = rendered };
+    public IState WithRect(Rect rect) => this with { Rect = rect };
 }
 
 public record StyledState
@@ -170,4 +111,7 @@ public record StyledState
 
     public StyledState(Style style)
         => (Style, DefaultStyle) = (style, style);
+
+    public StyledState WithStyle(Style style) => this with { Style = style };
+    public StyledState WithDefaultStyle(Style style) => this with { DefaultStyle = style };
 }
