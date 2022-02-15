@@ -14,13 +14,14 @@ public static class ViewDrawing
 
     public static ICanvas Draw(this ICanvas canvas, NodeView view)
         => canvas
-            .Draw(Shapes.StyledShape(view))
-            .Draw(Shapes.StyledText(view));
+            .Draw(Shapes.NodeShadow(view))
+            .Draw(Shapes.StyledShape(view));
+    
+    public static ICanvas Draw(this ICanvas canvas, HeaderView view)
+        => canvas.Draw(Shapes.StyledShape(view)).Draw(Shapes.StyledText(view));
 
     public static ICanvas Draw(this ICanvas canvas, SlotView view)
-        => canvas
-            .Draw(Shapes.StyledShape(view))
-            .Draw(Shapes.StyledText(view));
+        => canvas.Draw(Shapes.StyledShape(view)).Draw(Shapes.StyledText(view));
 
     public static ICanvas Draw(this ICanvas canvas, SocketView view)
         => canvas.Draw(Shapes.StyledShape(view));

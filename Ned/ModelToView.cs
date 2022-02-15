@@ -23,11 +23,9 @@ public static class ModelToView
         {
             viewLookup.TryGetValue(node.Id, out var oldView);
 
-            // TODO: change the algorithm to keep putting them to the left of the previous views, right now starts in upper left corner 
-
             var rect = oldView?.Rect ?? 
                 new Rect(new Point(offsetX + cnt++ * (Dimensions.NodeWidth + Dimensions.NodeSpacing), offsetY), new Size(Dimensions.NodeWidth, Dimensions.NodeHeight(node.Slots.Count)));
-            var newView = node.ToView(rect, ToViews(node.Slots, rect.TopLeft, oldView?.SlotViews));
+            var newView = node.ToView(oldView, rect);
 
             result.Add(newView);
         }
@@ -63,20 +61,14 @@ public static class ModelToView
 
     public static IReadOnlyList<SlotView> ToViews(this IReadOnlyList<Slot> slots, Point point, IReadOnlyList<SlotView>? views)
     {
-        var slotLookup = slots.ToDictionary(n => n.Id, n => n);
-        var viewLookup = views?.ToDictionary(v => v.Id, v => v) ?? new Dictionary<Guid, SlotView>();
-
         var result = new List<SlotView>();
         var rect = new Rect(point.X, point.Y + Dimensions.NodeHeaderHeight, Dimensions.NodeWidth, Dimensions.NodeSlotHeight);
         foreach (var slot in slots)
         {
-            // TODO: what does oldView do here? This is not clear. 
-            viewLookup.TryGetValue(slot.Id, out var oldView);
             var newView = slot.ToView(rect);
             rect.Offset(0, Dimensions.NodeSlotHeight);
             result.Add(newView);
         }
-
         return result;
     }
 
@@ -90,8 +82,15 @@ public static class ModelToView
     public static Rect NodeHeaderRect(this Rect rect)
         => new(rect.TopLeft, new Size(Dimensions.NodeWidth, Dimensions.NodeHeaderHeight));
 
-    public static NodeView ToView(this Node self, Rect rect, IReadOnlyList<SlotView> slotViews)
-        => new(self, rect, rect.NodeHeaderRect(), slotViews);
+    public static NodeView ToView(this Node self, NodeView? oldView, Rect rect)
+        => (oldView ?? new NodeView(self))
+            with 
+        {
+            Node = self,
+            Rect = rect,
+            HeaderView = self.Header.ToView(rect.NodeHeaderRect()),
+            SlotViews = self.Slots.ToViews(rect.TopLeft, oldView?.SlotViews)
+        };
 
     public static Point LeftCenter(this Rect rect)
         => new(rect.Left, rect.Top + rect.Height / 2);
@@ -101,6 +100,9 @@ public static class ModelToView
 
     public static SocketView ToView(this Socket self, Point point)
         => new(self, point);
+
+    public static HeaderView ToView(this Header self, Rect rect)
+        => new(self, rect, self.Left?.ToView(rect.LeftCenter()), self.Right?.ToView(rect.RightCenter()));
 
     public static SlotView ToView(this Slot self, Rect rect)
         => new(self, rect, self.Left?.ToView(rect.LeftCenter()), self.Right?.ToView(rect.RightCenter()));

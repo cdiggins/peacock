@@ -20,5 +20,14 @@ namespace Ned
 
         public static IReadOnlyDictionary<Guid, Socket> GetSocketLookup(this Graph g)
             => g.GetSockets().ToGuidLookup();
+
+        public static IEnumerable<SocketView> GetSocketViews(this GraphView g)
+            => g.NodeViews.SelectMany(GetSocketViews);
+
+        public static IEnumerable<SocketView> GetSocketViews(this NodeView n)
+            => n.SlotViews.SelectMany(GetSocketViews);
+
+        public static IEnumerable<SocketView> GetSocketViews(this SlotView s)
+            => (new[] { s.LeftView, s.RightView }).WhereNotNull();
     }
 }

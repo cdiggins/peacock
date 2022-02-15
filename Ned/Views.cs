@@ -15,23 +15,23 @@ namespace Ned
     }
 
     public record ConnectionView(
-        Connection? Connection, 
+        Connection? Connection,
         Line Line)
         : ElementView(Connection);
 
     public record HeaderView(
-        Node Node,
+        Header Header,
         Rect Rect,
         SocketView? LeftView,
         SocketView? RightView
-        );
+        ) : ElementView(Header);
 
-    public record NodeView(
-        Node Node, 
-        Rect Rect,
-        Rect HeaderRect,
-        IReadOnlyList<SlotView> SlotViews)
-        : ElementView(Node);
+    public record NodeView(Node Node) : ElementView(Node)
+    {
+        public Rect Rect { get; init; } = new();
+        public HeaderView HeaderView { get; init; }
+        public IReadOnlyList<SlotView> SlotViews { get; init; } = Array.Empty<SlotView>();
+    }
 
     public record SlotView(
         Slot Slot, 

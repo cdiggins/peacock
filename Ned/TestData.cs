@@ -25,8 +25,8 @@ Pair
 --
 Line
 * Value *
-* A * 
-* B *
+* A ▽ * 
+* B ▽ *
   Middle *
   Length *   
 --
@@ -34,7 +34,7 @@ Vector
 * Value *
 * X *
 * Y * 
-  Normal *
+  Normal ▽ *
   Magnitude *
   Values[] *
 --
@@ -47,11 +47,11 @@ Size
 --
 Rect
 * Value *
-* Position *
-* Size *
+* Position ▽ *
+* Size ▽ *
   Center *
 --
-Binary Arithmetic
+Arithmetic
 * A *
 * B *
   Add *
@@ -62,7 +62,7 @@ Binary Arithmetic
   Interval * 
   Magnitude * 
 --
-Trigonometry
+Trig Ops
 * Theta * 
   Sine *
   Cosine * 
@@ -71,7 +71,7 @@ Trigonometry
   Cosecant *
   Cotangent *
 --
-Common Operations
+Common Ops
 * Input *
   Negate *
   Inverse *
@@ -94,7 +94,7 @@ Pair
 * B *
   Output[] *
 --
-Sub-sequence
+Subsequence
 * A[] *
 * Interval *
   Output[] *
@@ -172,7 +172,7 @@ Boolean
   Not A *
   Not B *
 --
-Set-Element Ops
+Set 
 * Set[] * 
 * Element *
   Contains *
@@ -203,7 +203,7 @@ Array Ops
   Last *
   Range * 
 -- 
-Select By Index
+Select Index
 * Input[] * 
 * Indices[] *
   Output[] *
@@ -223,10 +223,27 @@ Select By Index
             => CreateNode(s.Trim().Split('\n'));
 
         public static Node CreateNode(IEnumerable<string> contents)
-            => new()
+        {
+            var label = contents.First();
+            contents = contents.Skip(1);
+            var first = contents.First();
+            var slot = CreateSlot(first);
+
+            var header = new Header() { Label = label };
+            if (slot.Label == "Value")
             {
-                Label = contents.First(),
-                Slots = contents.Skip(1).Select(CreateSlot).ToList()
-            };
+                header = header with { Left = slot.Left, Right = slot.Right };
+                contents = contents.Skip(1);
+            }
+
+            var slots = contents.Select(CreateSlot).ToList();
+
+            return new()
+               {
+                   Header = header,
+                   Label = label,                      
+                   Slots = slots,
+               };
+        }
     }
 }

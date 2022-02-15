@@ -20,7 +20,8 @@ namespace Ned
     }
 
     public record Node : LabeledElement
-    { 
+    {
+        public Header Header { get; init; } = new();
         public IReadOnlyList<Slot> Slots { get; init; } = Array.Empty<Slot>();
     }
 
@@ -28,6 +29,11 @@ namespace Ned
     {
         public Socket? Left { get; init; }
         public Socket? Right { get; init; }       
+    }
+
+    public record Header : Slot
+    {
+        public bool IsTypeNode => Left != null && Right != null;
     }
 
     public record Socket : LabeledElement

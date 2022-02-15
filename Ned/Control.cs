@@ -15,6 +15,9 @@ public interface IControl
     public IControl RemoveBehavior(IBehavior behavior);
 }
 
+// When a new state is provided, this has an impact on the children. 
+// This could be stored in the control ... otherwise we end up in a tough situiation
+
 public record Control<TState> : IControl
 {
     public Control(TState state, Func<ICanvas, TState, ICanvas> drawFunc, IEnumerable<IControl>? children = null)

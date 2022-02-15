@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -13,10 +14,12 @@ namespace Ned
         private Graph _graph;
         private GraphView _graphView;
         private IControl _graphControl;
+        public WpfRenderer Renderer = new WpfRenderer();
+        public int WheelZoom = 0;
 
         public DispatcherTimer Timer = new DispatcherTimer
         {
-            Interval = TimeSpan.FromMilliseconds(13)
+            Interval = TimeSpan.FromMilliseconds(25)
         };
 
         public DateTimeOffset Started;
@@ -44,7 +47,7 @@ namespace Ned
             MouseDown += (sender, args) => ProcessInput(new MouseDownEvent(args));
             MouseUp += (sender, args) => ProcessInput(new MouseUpEvent(args));
             MouseMove += (sender, args) => ProcessInput(new MouseMoveEvent(args));
-            MouseWheel += (sender, args) => ProcessInput(new MouseWheelEvent(args));
+            PreviewMouseWheel += (sender, args) => ProcessInput(new MouseWheelEvent(args));
             SizeChanged += (sender, args) => ProcessInput(new ResizeEvent(args));
 
             // Animation timer
@@ -55,15 +58,32 @@ namespace Ned
 
         protected override void OnRender(DrawingContext drawingContext)
         {
+            var rect = new Rect(new(), RenderSize);
+            drawingContext.PushClip(new RectangleGeometry(rect));
+            drawingContext.DrawRectangle(new SolidColorBrush(Colors.SlateGray), new Pen(), rect);
+            double zoomFactor = Math.Pow(1.15, WheelZoom / 120.0);
+            var scaleTransform = new ScaleTransform(zoomFactor, zoomFactor);
+            drawingContext.PushTransform(scaleTransform);
+            Renderer.Context = drawingContext;            
+            _graphControl.Draw(Renderer);
+            drawingContext.Pop();
+            drawingContext.Pop();
             base.OnRender(drawingContext);
-            _graphControl.Draw(new WpfRenderer(drawingContext));
         }
 
         public void ProcessInput<T>(T inputEvent)
             where T : InputEvent
         {
+            if (inputEvent is MouseWheelEvent mwe)
+            {
+                WheelZoom += mwe.Args.Delta;
+            }
+
             inputEvent.Element = this;
-            _graphControl = _graphControl.ProcessInput(inputEvent);
+            var newGraphControl = _graphControl.ProcessInput(inputEvent);
+            if (newGraphControl == _graphControl)
+                return;
+            _graphControl = newGraphControl;
             InvalidateVisual();
         }
     }
