@@ -1,7 +1,5 @@
-﻿using Peacock;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 
 namespace Ned
@@ -15,7 +13,7 @@ namespace Ned
             => n.Slots.SelectMany(GetSockets);
 
         public static IEnumerable<Socket> GetSockets(this Slot s)
-            => (new[] { s.Left, s.Right }).Where(s => s != null);
+            => (new[] { s.Left, s.Right }).WhereNotNull();
 
         public static IReadOnlyDictionary<Guid, T> ToGuidLookup<T>(this IEnumerable<T> xs) where T : Element
             => xs.ToDictionary(x => x.Id, x => x);

@@ -16,13 +16,20 @@ namespace Ned
 
     public record ConnectionView(
         Connection? Connection, 
-        Point Start, 
-        Point End) 
+        Line Line)
         : ElementView(Connection);
+
+    public record HeaderView(
+        Node Node,
+        Rect Rect,
+        SocketView? LeftView,
+        SocketView? RightView
+        );
 
     public record NodeView(
         Node Node, 
         Rect Rect,
+        Rect HeaderRect,
         IReadOnlyList<SlotView> SlotViews)
         : ElementView(Node);
 

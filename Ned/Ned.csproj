@@ -7,8 +7,4 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Peacock\Peacock\Peacock.csproj" />
-  </ItemGroup>
-
 </Project>

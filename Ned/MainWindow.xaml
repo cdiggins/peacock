@@ -6,7 +6,6 @@
         xmlns:local="clr-namespace:Ned"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <Grid>
-
-    </Grid>
+    <local:GraphControl x:Name="GraphControl">
+    </local:GraphControl>
 </Window>

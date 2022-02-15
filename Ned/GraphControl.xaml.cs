@@ -1,18 +1,7 @@
-﻿using Peacock;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace Ned
 {
@@ -23,7 +12,14 @@ namespace Ned
     {
         private Graph _graph;
         private GraphView _graphView;
-        private IComponent _graphComponent;
+        private IControl _graphControl;
+
+        public DispatcherTimer Timer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(13)
+        };
+
+        public DateTimeOffset Started;
 
         public Graph Graph
         {
@@ -32,7 +28,7 @@ namespace Ned
             {
                 _graph = value;
                 _graphView = _graph.ToView(_graphView);
-                _graphComponent = CreateComponent(_graphView);
+                _graphControl = _graphView.ToControl();
                 InvalidateVisual();
             }
         }        
@@ -41,20 +37,34 @@ namespace Ned
         {
             InitializeComponent();
             Graph = new Graph { Label = "My Graph", Nodes = TestData.TestNodes };
+
+            KeyDown += (sender, args) => ProcessInput(new KeyDownEvent(args));
+            KeyUp += (sender, args) => ProcessInput(new KeyUpEvent(args));
+            MouseDoubleClick += (sender, args) => ProcessInput(new MouseDoubleClickEvent(args));
+            MouseDown += (sender, args) => ProcessInput(new MouseDownEvent(args));
+            MouseUp += (sender, args) => ProcessInput(new MouseUpEvent(args));
+            MouseMove += (sender, args) => ProcessInput(new MouseMoveEvent(args));
+            MouseWheel += (sender, args) => ProcessInput(new MouseWheelEvent(args));
+            SizeChanged += (sender, args) => ProcessInput(new ResizeEvent(args));
+
+            // Animation timer
+            Timer.Tick += (sender, args) => ProcessInput(new ClockEvent((DateTimeOffset.Now - Started).TotalSeconds));
+            Timer.Start();
+            Started = DateTimeOffset.Now;
         }
 
         protected override void OnRender(DrawingContext drawingContext)
         {
             base.OnRender(drawingContext);
-
-            // TODO: 
-            _graphComponent.Draw(new WpfRenderer(drawingContext));
+            _graphControl.Draw(new WpfRenderer(drawingContext));
         }
 
-        public static IComponent CreateComponent(GraphView graphView)
+        public void ProcessInput<T>(T inputEvent)
+            where T : InputEvent
         {
-            // TODO:
-            throw new NotImplementedException();
+            inputEvent.Element = this;
+            _graphControl = _graphControl.ProcessInput(inputEvent);
+            InvalidateVisual();
         }
     }
 }
