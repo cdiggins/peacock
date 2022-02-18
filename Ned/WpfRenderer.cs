@@ -92,11 +92,14 @@ namespace Ned
 
         public FormattedText GetFormattedText(StyledText style)
             => GetOrCreate(FormattedTexts, style, style => new(style.Text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, GetTypeface(style.Style), style.Style.FontSize,
-                GetBrush(style.Style.BrushStyle), new NumberSubstitution(), 1.0)); 
+                GetBrush(style.Style.BrushStyle), new NumberSubstitution(), 1.0));
 
         // var dpiInfo = VisualTreeHelper.GetDpi(visual);
         // From <https://stackoverflow.com/questions/58343299/formattedtext-and-pixelsperdip-if-application-is-scaled-independently-of-dpi> 
         // TODO: handle DPI properly
         // TODO: support different font styles, weights, and stretches
+
+        public ICanvas Draw(BrushStyle brushStyle, PenStyle penStyle, Geometry geometry)
+            => WithContext(context => context.DrawGeometry(GetBrush(brushStyle), GetPen(penStyle), geometry));
     }
 }

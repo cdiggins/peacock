@@ -185,6 +185,9 @@ public static class Extensions
     public static Rect ShrinkAndOffset(this Rect rect, Size size)
         => new(rect.Location.Add(size), rect.Size.Subtract(size));
 
+    public static Point Multiply(this Point point, double factor)
+        => new(point.X * factor, point.Y * factor);
+
     public static IReadOnlyList<T> Add<T>(this IReadOnlyList<T> self, T item)
         => self.Append(item).ToList();
 

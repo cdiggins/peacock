@@ -9,10 +9,10 @@ namespace Ned;
 
 public static class Dimensions
 {
-    public static double NodeWidth => 100;
+    public static double NodeWidth => 110;
     public static double NodeSpacing => 20;
     public static double NodeSlotHeight => 20;
-    public static double NodeHeaderHeight => 30;
+    public static double NodeHeaderHeight => 25;
     public static Radius SocketRadius => new(6, 6);
     public static Radius SlotRadius => NodeRadius;
     public static Radius NodeRadius => new(8, 8);
@@ -20,7 +20,8 @@ public static class Dimensions
     public static double NodeBorder => 3;
     public static double ConnectionWidth => 5;
     public static double SocketBorder => 1;
-    public static double HeaderTextSize => 16;
+    public static double HeaderTextSize => 14;
     public static double SlotTextSize => 12;
-    public static Size SlotTextOffset => new(SocketRadius.X * 2, 0);
+    public static double SlotTypeTextSize => 6;
+    public static Size SlotTextOffset => new(SocketRadius.X * 1.5, 0);
 }

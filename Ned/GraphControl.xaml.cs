@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 
@@ -11,11 +13,10 @@ namespace Ned
     /// </summary>
     public partial class GraphControl : UserControl
     {
-        private Graph _graph;
-        private GraphView _graphView;
         private IControl _graphControl;
         public WpfRenderer Renderer = new WpfRenderer();
         public int WheelZoom = 0;
+        public double ZoomFactor => Math.Pow(1.15, WheelZoom / 120.0);
 
         public DispatcherTimer Timer = new DispatcherTimer
         {
@@ -24,22 +25,21 @@ namespace Ned
 
         public DateTimeOffset Started;
 
-        public Graph Graph
+        public class MouseStatus : IMouseStatus
         {
-            get => _graph;
-            set
-            {
-                _graph = value;
-                _graphView = _graph.ToView(_graphView);
-                _graphControl = _graphView.ToControl();
-                InvalidateVisual();
-            }
-        }        
+            public MouseStatus(GraphControl control) => Control = control;
+            public GraphControl Control { get; }
+            public Point Location => Mouse.GetPosition(Control).Multiply(1.0 / Control.ZoomFactor);
+            public bool LButtonDown => Mouse.LeftButton == MouseButtonState.Pressed;
+            public bool RButtonDown => Mouse.RightButton == MouseButtonState.Pressed;
+            public bool MButtonDown => Mouse.MiddleButton == MouseButtonState.Pressed;
+        }
 
         public GraphControl()
         {
             InitializeComponent();
-            Graph = new Graph { Label = "My Graph", Nodes = TestData.TestNodes };
+            var graph = new Graph(TestData.TestNodes, new Connection[] { });
+            _graphControl = new GraphView(graph).ToControl();
 
             KeyDown += (sender, args) => ProcessInput(new KeyDownEvent(args));
             KeyUp += (sender, args) => ProcessInput(new KeyUpEvent(args));
@@ -61,14 +61,29 @@ namespace Ned
             var rect = new Rect(new(), RenderSize);
             drawingContext.PushClip(new RectangleGeometry(rect));
             drawingContext.DrawRectangle(new SolidColorBrush(Colors.SlateGray), new Pen(), rect);
-            double zoomFactor = Math.Pow(1.15, WheelZoom / 120.0);
-            var scaleTransform = new ScaleTransform(zoomFactor, zoomFactor);
+            var scaleTransform = new ScaleTransform(ZoomFactor, ZoomFactor);
             drawingContext.PushTransform(scaleTransform);
             Renderer.Context = drawingContext;            
             _graphControl.Draw(Renderer);
             drawingContext.Pop();
             drawingContext.Pop();
             base.OnRender(drawingContext);
+        }
+
+        public class Updates : IUpdates
+        {
+            public Dictionary<Guid, List<Func<IView, IView>>> _lookup { get; } = new();
+            public IReadOnlyDictionary<Guid, List<Func<IView, IView>>> Lookup => _lookup;
+
+            public IUpdates AddUpdate(Guid id, Func<IView, IView> func)
+            {
+                if (!Lookup.ContainsKey(id))
+                {
+                    _lookup.Add(id, new());
+                }
+                _lookup[id].Add(func);
+                return this;
+            }
         }
 
         public void ProcessInput<T>(T inputEvent)
@@ -79,11 +94,16 @@ namespace Ned
                 WheelZoom += mwe.Args.Delta;
             }
 
-            inputEvent.Element = this;
-            var newGraphControl = _graphControl.ProcessInput(inputEvent);
+            var updates = new Updates() as IUpdates;
+            inputEvent.MouseStatus = new MouseStatus(this);
+            (var newGraphControl, updates) = _graphControl.ProcessInput(updates, inputEvent);
             if (newGraphControl == _graphControl)
                 return;
             _graphControl = newGraphControl;
+
+            var newView = _graphControl.View.ApplyUpdates(updates);
+            _graphControl = _graphControl.UpdateView(newView);
+            
             InvalidateVisual();
         }
     }

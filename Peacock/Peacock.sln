@@ -5,8 +5,6 @@ VisualStudioVersion = 17.1.32104.313
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ned", "..\Ned\Ned.csproj", "{33D30479-09AC-4F64-98A8-B3EC22EA766B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Peacock", "Peacock\Peacock.csproj", "{1771AE1F-0E6E-468C-A2EF-6E029BFAC9FF}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,10 +15,6 @@ Global
 		{33D30479-09AC-4F64-98A8-B3EC22EA766B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{33D30479-09AC-4F64-98A8-B3EC22EA766B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{33D30479-09AC-4F64-98A8-B3EC22EA766B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1771AE1F-0E6E-468C-A2EF-6E029BFAC9FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1771AE1F-0E6E-468C-A2EF-6E029BFAC9FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1771AE1F-0E6E-468C-A2EF-6E029BFAC9FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1771AE1F-0E6E-468C-A2EF-6E029BFAC9FF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

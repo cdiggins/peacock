@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Ned
@@ -11,239 +12,295 @@ namespace Ned
         // Some things derive from other things 
 
         public static string Text =
-@"Point
+
+@"Point 2D
 * Value *
-* X *
-* Y *
+* X : Number *
+* Y : Number *
   Values[] *
+--
+Mouse
+  Position : Point 2D *
+  Left : Boolean *
+  Middle : Boolean *
+  Right : Boolean * 
+--
+Keyboard
+  Keys : Array * 
+--
+Time
+  Seconds : Number *  
 --
 Pair 
 * Value *
-* A *
-* B *  
-  Middle *
+* A : Any *
+* B : Any *  
 --
 Line
 * Value *
-* A ▽ * 
-* B ▽ *
-  Middle *
-  Length *   
+* A : Point 2D * 
+* B : Point 2D *
+  Middle : Point 2D *
+  Length : Number *   
 --
-Vector
+Vector 2D
 * Value *
-* X *
-* Y * 
-  Normal ▽ *
-  Magnitude *
-  Values[] *
+* X : Number *
+* Y : Number * 
+  Normal : Vector 2D *
+  Magnitude : Number *
+  Values : Array *
 --
-Size
+Size 2D
 * Value * 
-* Width * 
-* Height *
-  Vector *
-  Magnitude *
+* Width : Number * 
+* Height : Number *
+  Magnitude : Number *
 --
 Rect
 * Value *
-* Position ▽ *
-* Size ▽ *
-  Center *
+* Position : Point 2D *
+* Size : Size 2D *
+  Center : Point 2D *
 --
 Arithmetic
-* A *
-* B *
-  Add *
-  Subtract *
-  Multiply *
-  Divide *
-  Average *
-  Interval * 
-  Magnitude * 
+* A : Any *
+* B : Any *
+  Add : Any *
+  Subtract : Any *
+  Multiply : Any *
+  Divide : Any *
+  Average : Any *
+  Interval : Any * 
+  Magnitude : Any * 
 --
 Trig Ops
-* Theta * 
-  Sine *
-  Cosine * 
-  Tangent *
-  Secant *
-  Cosecant *
-  Cotangent *
+* Theta : Angle * 
+  Sine : Number *
+  Cosine : Number * 
+  Tangent : Number *
+  Secant : Number *
+  Cosecant : Number *
+  Cotangent : Number *
 --
-Common Ops
-* Input *
-  Negate *
-  Inverse *
-  Sign *
-  Magnitude *
-  Sqrt *  
+Inv Trig Ops
+* Value : Number * 
+  ArcSine : Angle *
+  ArcCosine : Angle * 
+  ArcTangent : Angle *
+  ArcSecant : Angle *
+  ArcCosecant : Angle *
+  ArcCotangent : Angle *
+--
+Number Ops
+* Input : Number *
+  Negate : Number *
+  Inverse : Number *
+  Sign : Number *
+  Magnitude : Number *
+  Sqrt : Number *  
+  Deg To Rad : Number *
+  Rad to Deg : Number *
 --
 Repeat
-* Value *
-* Count *
-  Output[] *
+* Element : Any *
+* Count : Integer *
+  Output : Array *
 --
 Sequence
-* Start *
-* Count * 
-  Output[] *
+* Start : Integer *
+* Count : Integer * 
+  Output : Array *
 --
 Pair
-* A *
-* B *
-  Output[] *
+* A : Any *
+* B : Any *
+  Output : Array *
 --
 Subsequence
-* A[] *
-* Interval *
-  Output[] *
+* A : Array *
+* Interval : Interval *
+  Output : Array *
 --
 Element At
-* A[] *
-* Index *
-  Output *
+* A : Array *
+* Index : Integer *
+  Output : Array *
 --
 Where
-* A[] *
-* Filter[] *
-  Output[] *
+* A : Array *
+* Filter : Array *
+  Output : Array *
 --
 Conditional
-* A *
-* B *
-* Condition *
-  Output * 
+* A : Any *
+* B : Any *
+* Condition : Boolean *
+  Output : Any * 
 --
 Lerp
-* Interval *
-* Amount *
-  Output *
+* Interval : Interval *
+* Amount : Number *
+  Output : Any *
 --
 Inverse Lerp
-* Interval *
-* Lerp *
-  Output *
+* Interval : Interval *
+* Lerp : Any *
+  Output : Number *
 --
 Interval
 * Value *
-* A *
-* B *
-* Low *
-* High *
-  Magnitude *
-  Middle * 
+* A : Any *
+* B : Any *
+* Low : Any *
+* High : Any *
+  Magnitude : Number *
+  Middle : Any * 
 --
 Clamp 
-* Input *
-* Interval *
-  Output *
+* Input : Any *
+* Interval : Interval *
+  Output : Any *
 --
 Circle
 * Value *
-* Center *
-* Radius * 
+* Center : Point 2D *
+* Radius : Number * 
 --
 Chord
 * Value *
-* Circle *
-* Interval *
+* Circle : Circle *
+* Interval : Interval *
 --
 Comparison
-* A * 
-* B *
-  > *
-  >= *
-  < *
-  <= *
-  == *
-  != *
-  Max *
-  Min *
+* A : Any * 
+* B : Any *
+  > : Boolean *
+  >= : Boolean *
+  < : Boolean *
+  <= : Boolean *
+  == : Boolean *
+  != : Boolean *
+  Max : Any *
+  Min : Any *
 --
 Boolean
-* A *
-* B *
-  And *
-  Or *
-  Nand *
-  Nor *
-  Xor *
-  Not A *
-  Not B *
+* A : Boolean *
+* B : Boolean *
+  And : Boolean *
+  Or : Boolean *
+  Nand : Boolean *
+  Nor : Boolean *
+  Xor : Boolean *
+  Not A : Boolean *
+  Not B : Boolean *
 --
 Set 
-* Set[] * 
-* Element *
-  Contains *
-  Add[] *
-  Remove[] * 
+* Set : Array * 
+* Element : Any *
+  Contains : Boolean*
+  Add : Array *
+  Remove : Array * 
 --
 Set Ops
-* SetA[] *
-* SetB[] *
-  Union *
-  Difference *
-  Intersection *
+* A : Array *
+* B : Array *
+  Union : Array *
+  Difference : Array *
+  Intersection : Array *
 --
 Sample
-* Interval *
-* Count * 
-  Output[] *
-  Random[] *
-  Poissonian[] *
+* Interval : Interval *
+* Count : Integer * 
+  Output : Array *
+  Random : Array *
+  Poissonian : Array *
 --
 Array Ops
-* Input[] *
-  Reverse[] *
-  Sort[] * 
-  Shuffle[] *
-  Count *
-  First *
-  Last *
-  Range * 
+* Input : Array *
+  Reverse : Array *
+  Sort : Array * 
+  Shuffle : Array *
+  Count : Integer *
+  First : Any *
+  Last : Any *
+  Range : Any * 
 -- 
 Select Index
-* Input[] * 
-* Indices[] *
-  Output[] *
+* Input : Array * 
+* Indices : Array *
+  Output : Array *
+--
+Bezier Curve
+* Start : Any *
+* Control A : Any *
+* Control B : Any *
+* End : Any *
+* Amount : Number * 
+  Output : Any * 
+--
+Transform 2D
+* Value *
+* Translation : Vector 2D *
+* Scale : Size 2D * 
+* Rotation : Angle *
 ";
         public static IEnumerable<Node> CreateNodes(string s)
-            => s.Split("--").Where(x => !string.IsNullOrWhiteSpace(x)).Select(CreateNode);        
+            => s.Split("--").Where(x => !string.IsNullOrWhiteSpace(x)).Select(CreateNode);
 
-        public static Slot CreateSlot(string s)
-            => new() 
+        public static Slot CreateSlot(string s, string nodeName)
+        {
+            s = s.Trim();
+
+            var hasLeftSocket = s.StartsWith("*");
+            var hasRightSocket = s.EndsWith("*");
+
+            s = s.TrimStart('*', ' ').TrimEnd('*', ' ').Trim();
+
+            var n = s.IndexOf(':');
+            var name = s.Trim();
+            var type = nodeName.Trim();
+
+            if (n >= 0)
             {
-                Label = s.Trim().TrimStart('*', ' ').TrimEnd('*', ' ').Trim(),
-                Left = s.Trim().StartsWith('*') ? new Socket() { LeftOrRight = true } : null,
-                Right = s.Trim().EndsWith('*') ? new Socket() { LeftOrRight = false } : null
-            };
+                name = s.Substring(0, n - 1).Trim();
+                type = s.Substring(n + 1).Trim();
+            }
+
+            return new Slot(name, type, hasLeftSocket ? new Socket(type, true) : null, hasRightSocket ? new Socket(type, false) : null);
+        }
 
         public static Node CreateNode(string s)
-            => CreateNode(s.Trim().Split('\n'));
+            => CreateNode(s.Trim().Split('\n', System.StringSplitOptions.RemoveEmptyEntries));
 
         public static Node CreateNode(IEnumerable<string> contents)
         {
-            var label = contents.First();
+            var label = contents.First().Trim();
             contents = contents.Skip(1);
-            var first = contents.First();
-            var slot = CreateSlot(first);
+            var first = contents.First().Trim();
+            var slot = CreateSlot(first, label);
+            var kind = NodeKind.OperatorSet;             
+            var header = new Header(label, null, null);
 
-            var header = new Header() { Label = label };
             if (slot.Label == "Value")
             {
-                header = header with { Left = slot.Left, Right = slot.Right };
+                header = new Header(slot.Type, slot.Left, slot.Right);
                 contents = contents.Skip(1);
+                kind = NodeKind.PropertySet;
             }
 
-            var slots = contents.Select(CreateSlot).ToList();
+            var r = new Node(label, kind, header, contents.Select(c => CreateSlot(c, label)).ToList());
 
-            return new()
-               {
-                   Header = header,
-                   Label = label,                      
-                   Slots = slots,
-               };
+            if (!r.Slots.Any(s => s.Left != null))
+            {
+                r = r with { Kind = NodeKind.Output };
+            }
+            if (!r.Slots.Any(s => s.Right != null))
+            {
+                r = r with { Kind = NodeKind.Input };
+            }
+
+            return r;
         }
     }
 }

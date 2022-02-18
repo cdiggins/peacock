@@ -1,4 +1,5 @@
-﻿using System.Windows.Media;
+﻿using System.Windows;
+using System.Windows.Media;
 
 namespace Ned;
 
@@ -11,8 +12,16 @@ public class Shapes
     public StyledRect StyledShape(SlotView view) => new(Styles.ShapeStyle(view), Shape(view));
     public StyledRect StyledShape(HeaderView view) => new(Styles.ShapeStyle(view), Shape(view));
     public StyledEllipse StyledShape(SocketView view) => new(Styles.ShapeStyle(view), Shape(view));
+    public StyledRect StyledShapeArraySocket(SocketView view) => new(Styles.ShapeStyle(view),
+        new RoundedRect(
+            new Rect(
+                view.Point.Subtract(new Point(Dimensions.SocketRadius.X, Dimensions.SocketRadius.Y)),
+                new Size(Dimensions.SocketRadius.X * 2, Dimensions.SocketRadius.Y * 2)),
+            new Radius(3, 3)));
+
     public StyledText StyledText(HeaderView view) => new(Styles.HeaderText(view), view.Rect, view.Header.Label);
     public StyledText StyledText(SlotView view) => new(Styles.SlotText(view), view.Rect.ShrinkAndOffset(Dimensions.SlotTextOffset), view.Slot.Label);
+    public StyledText StyledTypeText(SlotView view) => new(Styles.SlotTypeText(view), view.Rect.Shrink(Dimensions.SlotTextOffset), view.Slot.Type);
     public StyledLine StyledLine(ConnectionView view) => new(Styles.ConnectionPen(view), view.Line);
     public RoundedRect Shape(NodeView view) => new(view.Rect, Dimensions.NodeRadius);
     public RoundedRect Shape(SlotView view) => new(view.Rect, Dimensions.SlotRadius);
