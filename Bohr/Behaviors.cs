@@ -2,8 +2,9 @@
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
+using Peacock;
 
-namespace Ned;
+namespace Bohr;
 
 public record DragState(bool IsDragging = false, Point ControlStart = new(), Point MouseDragStart = new());
 

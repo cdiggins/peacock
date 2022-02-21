@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Media;
+using Peacock;
 
-namespace Ned;
+namespace Bohr;
 
 public static class ViewDrawing
 {

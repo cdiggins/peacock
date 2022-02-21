@@ -1,19 +1,10 @@
-﻿using System;
+﻿using Peacock;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 
-namespace Ned;
-
-// A view is the strict set of data required to provide an interactive visual representation. 
-// The details of how to style the representation (fonts,colors,brush-strokes,etc.) are 
-// separated by another functions that maps these things to controls. 
-
-public interface IView
-{
-    Guid Id { get; }
-    IView Apply(Func<IView, IView> func);
-}
+namespace Bohr;
 
 public abstract record ElementView(Element? Element) : IView
 {
@@ -69,7 +60,7 @@ public record HeaderView : SlotView
     public override IView Apply(Func<IView, IView> func)
         => func(new HeaderView(Header, Rect, Kind, LeftView?.ApplyTyped(func), RightView?.ApplyTyped(func)));
 
-    public HeaderView WithRect(Rect rect)
+    public new HeaderView WithRect(Rect rect)
         => new(Header, rect, Kind);
 }
 

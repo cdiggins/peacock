@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Ned;
+namespace Bohr;
 
 public record Element
 {

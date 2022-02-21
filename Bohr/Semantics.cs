@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Ned
+namespace Bohr
 {
     public static class Semantics
     {

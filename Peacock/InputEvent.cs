@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Input;
 
-namespace Ned;
+namespace Peacock;
 
 public interface IComponentEvent
 { }
@@ -26,11 +23,11 @@ public interface IMouseStatus
 
 public record InputEvent : IInputEvent
 {
-    public IMouseStatus? MouseStatus { get; set; }
+    public IMouseStatus MouseStatus { get; set; }
 }
 
-public record KeyDownEvent(KeyboardEventArgs Args) : InputEvent;
-public record KeyUpEvent(KeyboardEventArgs Args) : InputEvent;
+public record KeyDownEvent(KeyEventArgs Args) : InputEvent;
+public record KeyUpEvent(KeyEventArgs Args) : InputEvent;
 public record MouseDoubleClickEvent(MouseButtonEventArgs Args) : InputEvent;
 public record MouseDownEvent(MouseButtonEventArgs Args) : InputEvent;
 public record MouseUpEvent(MouseButtonEventArgs Args) : InputEvent;
@@ -42,4 +39,4 @@ public record PropsEvent(WindowProps Props) : InputEvent;
 
 public record DragStartEvent(Point Point) : IComponentEvent;
 public record DragMoveEvent(Point Delta) : IComponentEvent;
-public record DragEndEvent() : IComponentEvent;
+public record DragEndEvent : IComponentEvent;

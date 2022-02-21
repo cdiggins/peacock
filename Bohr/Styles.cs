@@ -1,6 +1,7 @@
 ﻿using System.Windows.Media;
+using Peacock;
 
-namespace Ned;
+namespace Bohr;
 
 public class Styles
 {

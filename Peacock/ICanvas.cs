@@ -2,9 +2,13 @@
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace Ned;
+namespace Peacock;
 
-public record Alignment(AlignmentX X, AlignmentY Y);
+public record Alignment(AlignmentX X, AlignmentY Y)
+{
+    public static Alignment LeftCenter => new(AlignmentX.Left, AlignmentY.Center);
+}
+
 public record WindowProps(Rect Rect, string Title, Cursor Cursor);
 
 public record BrushStyle(Color Color);

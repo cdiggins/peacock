@@ -1,7 +1,7 @@
-﻿<Application x:Class="Ned.App"
+﻿<Application x:Class="Bohr.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:Ned"
+             xmlns:local="clr-namespace:Bohr"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
          

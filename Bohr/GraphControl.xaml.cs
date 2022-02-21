@@ -5,8 +5,9 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using Peacock;
 
-namespace Ned
+namespace Bohr
 {
     /// <summary>
     /// Interaction logic for GraphControl.xaml
@@ -38,22 +39,36 @@ namespace Ned
         public GraphControl()
         {
             InitializeComponent();
+            Focusable = true;
+            Focus();
             var graph = new Graph(TestData.TestNodes, new Connection[] { });
             _graphControl = new GraphView(graph).ToControl();
+            
 
-            KeyDown += (sender, args) => ProcessInput(new KeyDownEvent(args));
-            KeyUp += (sender, args) => ProcessInput(new KeyUpEvent(args));
-            MouseDoubleClick += (sender, args) => ProcessInput(new MouseDoubleClickEvent(args));
-            MouseDown += (sender, args) => ProcessInput(new MouseDownEvent(args));
-            MouseUp += (sender, args) => ProcessInput(new MouseUpEvent(args));
-            MouseMove += (sender, args) => ProcessInput(new MouseMoveEvent(args));
+            //(this.Parent as Window).PreviewKeyDown += (sender, args) => Console.WriteLine("Parent key press");
+            PreviewKeyDown += (sender, args) => ProcessInput(new KeyDownEvent(args));
+            PreviewKeyUp += (sender, args) => ProcessInput(new KeyUpEvent(args));
+            PreviewMouseDoubleClick += (sender, args) => ProcessInput(new MouseDoubleClickEvent(args));
+            PreviewMouseDown += (sender, args) => ProcessInput(new MouseDownEvent(args));
+            PreviewMouseUp += (sender, args) => ProcessInput(new MouseUpEvent(args));
+            PreviewMouseMove += (sender, args) => ProcessInput(new MouseMoveEvent(args));
             PreviewMouseWheel += (sender, args) => ProcessInput(new MouseWheelEvent(args));
             SizeChanged += (sender, args) => ProcessInput(new ResizeEvent(args));
-
+            
             // Animation timer
             Timer.Tick += (sender, args) => ProcessInput(new ClockEvent((DateTimeOffset.Now - Started).TotalSeconds));
             Timer.Start();
             Started = DateTimeOffset.Now;
+        }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+        }
+
+        protected override void OnPreviewKeyDown(KeyEventArgs e)
+        {
+            base.OnPreviewKeyDown(e);
         }
 
         protected override void OnRender(DrawingContext drawingContext)

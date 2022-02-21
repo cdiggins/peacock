@@ -1,21 +1,19 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace Ned;
+namespace Peacock;
 
 public static class Extensions
 {
     public static Rect Shrink(this Rect r, Rect padding)
-        => r.Shrink(padding.Left, padding.Top, padding.Right, padding.Bottom);
+        => Shrink(r, padding.Left, padding.Top, padding.Right, padding.Bottom);
 
     public static Rect Shrink(this Rect r, double left, double top, double right, double bottom)
         => new Rect(r.Left + left, r.Top + top, r.Width - left - right, r.Height - top - bottom);
 
     public static Rect Shrink(this Rect r, double padding)
-        => r.Shrink(padding, padding, padding, padding);
+        => Shrink(r, padding, padding, padding, padding);
 
     public static Rect GetRow(this Rect r, int row, int rowCount)
         => new(r.Left, r.Top + r.Height * row / rowCount, r.Width, r.Height / rowCount);
@@ -24,19 +22,19 @@ public static class Extensions
         => new(r.Left + r.Width * col / colCount, r.Top, r.Width / colCount, r.Bottom);
 
     public static Rect GetRowColumn(this Rect r, int row, int col, int rowCount, int colCount)
-        => r.GetRow(row, rowCount).GetColumn(col, colCount);
+        => GetColumn(GetRow(r, row, rowCount), col, colCount);
 
     public static IEnumerable<Rect> GetGrid(this Rect r, int rowCount, int colCount)
-        => Enumerable.Range(0, rowCount * colCount).Select(i => r.GetRowColumn(i / colCount, i % colCount, rowCount, colCount));
+        => Enumerable.Range(0, rowCount * colCount).Select(i => GetRowColumn(r, i / colCount, i % colCount, rowCount, colCount));
 
     public static IEnumerable<Rect> ComputeStackLayout(this Rect rect, IReadOnlyList<Rect> children, bool horizontalOrVertical = false, bool reverse = false)
         => horizontalOrVertical
             ? reverse
-                ? rect.ComputeHorizontalLayoutRight(children)
-                : rect.ComputeHorizontalLayoutLeft(children)
+                ? ComputeHorizontalLayoutRight(rect, children)
+                : ComputeHorizontalLayoutLeft(rect, children)
             : reverse
-                ? rect.ComputeVerticalLayoutUp(children)
-                : rect.ComputeVerticalLayoutDown(children);
+                ? ComputeVerticalLayoutUp(rect, children)
+                : ComputeVerticalLayoutDown(rect, children);
 
     public static IEnumerable<Rect> ComputeVerticalLayoutDown(this Rect rect, IReadOnlyList<Rect> children)
     {
@@ -74,7 +72,7 @@ public static class Extensions
         => new(0, 0, window.Width, window.Height);
 
     public static WindowProps GetProps(this Window window)
-        => new(window.GetRect(), window.Title, window.Cursor);
+        => new(GetRect(window), window.Title, window.Cursor);
 
     public static Window ApplyRect(this Window window, Rect rect)
     {
@@ -92,13 +90,13 @@ public static class Extensions
         => (window.Title = title, window).Item2;
 
     public static Window ApplyProps(this Window window, WindowProps props)
-        => window.ApplyRect(props.Rect).ApplyCursor(props.Cursor).ApplyTitle(props.Title);
+        => ApplyTitle(window.ApplyRect(props.Rect).ApplyCursor(props.Cursor), props.Title);
 
     public static Rect Resize(this Rect rect, Size size)
         => new(rect.Location, size);
 
     public static Point BottomCenter(this Rect rect)
-        => new(rect.Center().X, rect.Bottom);
+        => new(Center(rect).X, rect.Bottom);
 
     public static Rect MoveTo(this Rect rect, Point point)
         => new(point, rect.Size);
@@ -113,7 +111,7 @@ public static class Extensions
         => new(-point.X, -point.Y);
 
     public static Point Subtract(this Point self, Point point)
-        => self.Add(point.Negate());
+        => self.Add(Negate(point));
 
     public static Point GetScreenPosition(this MouseEventArgs args, Window window)
         => window.PointToScreen(args.GetPosition(window));
@@ -140,7 +138,7 @@ public static class Extensions
         => new(p.X - size.Width, p.Y - size.Width);
 
     public static Point CenterTopLeftOfSubarea(this Rect rect, Size size)
-        => rect.Center().Subtract(size.Half());
+        => Center(rect).Subtract(Half(size));
 
     public static Point GetAlignedLocation(this Rect rect, Size size, Alignment alignment)
         =>
@@ -148,13 +146,13 @@ public static class Extensions
             alignment.X switch
             {
                 AlignmentX.Right => rect.Right - size.Width,
-                AlignmentX.Center => rect.Center().X - size.HalfWidth(),
+                AlignmentX.Center => Center(rect).X - size.HalfWidth(),
                 _ => rect.Left
             },
             alignment.Y switch
             {
                 AlignmentY.Bottom => rect.Bottom - size.Height,
-                AlignmentY.Center => rect.Center().Y - size.HalfHeight(),
+                AlignmentY.Center => Center(rect).Y - size.HalfHeight(),
                 _ => rect.Top
             });
 
@@ -168,7 +166,7 @@ public static class Extensions
         => self.Where(x => x != null);
 
     public static IEnumerable<T> WhereNotNull<T>(params T?[] self) where T : class
-        => self.WhereNotNull();
+        => WhereNotNull<T>((IEnumerable<T?>)self);
     
     public static Size Subtract(this Size size, Size amount)
         => new(size.Width - amount.Width, size.Height - amount.Height);

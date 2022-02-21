@@ -1,21 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace Ned;
-
-public interface IControl
-{
-    public IView View { get; }
-    public double ZOrder { get; }
-    public IReadOnlyList<IControl> Children { get; }
-    public IReadOnlyList<IBehavior> Behaviors { get; }
-    public ICanvas Draw(ICanvas canvas);
-    public (IControl, IUpdates) ProcessInput(IUpdates updates, InputEvent input);
-    public IControl AddBehavior(IBehavior behavior);
-    public IControl RemoveBehavior(IBehavior behavior);
-    public IControl UpdateView(IView view);
-}
+﻿namespace Peacock;
 
 /// <summary>
 /// A generic immutable UI control. Instead of being changed, a new version is returned when processing input, 
@@ -73,13 +56,11 @@ public class Control<TView> : IControl
         var foregroundChildren = Children.Where(c => c.ZOrder >= 0).OrderBy(c => c.ZOrder);
         var foregroundBehaviors = Behaviors.Where(c => c.ZOrder >= 0).OrderBy(c => c.ZOrder);
 
-        canvas = backgroundBehaviors.Aggregate(canvas, (canvas, x) => x.Draw(this, canvas));
-        canvas = backgroundChildren.Aggregate(canvas, (canvas, x) => x.Draw(canvas));
-        
+        canvas = backgroundChildren.Aggregate(canvas, (c, x) => x.Draw(c));
+        canvas = backgroundBehaviors.Aggregate(canvas, (c, x) => x.Draw(this, c));
         canvas = DrawFunc(canvas, View);
-        
-        canvas = foregroundChildren.Aggregate(canvas, (canvas, x) => x.Draw(canvas));
-        canvas = foregroundBehaviors.Aggregate(canvas, (canvas, x) => x.Draw(this, canvas));        
+        canvas = foregroundChildren.Aggregate(canvas, (c, x) => x.Draw(c));
+        canvas = foregroundBehaviors.Aggregate(canvas, (c, x) => x.Draw(this, c));        
         
         return canvas;
     }
@@ -90,16 +71,14 @@ public class Control<TView> : IControl
         foreach (var b in Behaviors)
         {
             (updates, var newBehavior) = b.ProcessInput(this, updates, input);
-            if (newBehavior != null)
-                newBehaviors.Add(newBehavior);        
+            newBehaviors.Add(newBehavior);        
         }
 
         var newChildren = new List<IControl>();
         foreach (var c in Children)
         {
             (var control, updates) = c.ProcessInput(updates, input);
-            if (control != null)
-                newChildren.Add(control);   
+            newChildren.Add(control);   
         }
 
         return (new Control<TView>(View, ZOrder, DrawFunc, ChildrenFunc, newChildren, newBehaviors), updates);

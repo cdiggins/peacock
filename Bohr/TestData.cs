@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Ned
+namespace Bohr
 {
     public class TestData
     {
@@ -12,13 +12,15 @@ namespace Ned
         // Some things derive from other things 
 
         public static string Text =
-
+            
 @"Point 2D
 * Value *
 * X : Number *
 * Y : Number *
-  Values[] *
---
+  Values[] *";
+
+            public static string MoreText = 
+                @"--
 Mouse
   Position : Point 2D *
   Left : Boolean *
@@ -84,7 +86,7 @@ Trig Ops
   Cotangent : Number *
 --
 Inv Trig Ops
-* Value : Number * 
+* Input : Number * 
   ArcSine : Angle *
   ArcCosine : Angle * 
   ArcTangent : Angle *

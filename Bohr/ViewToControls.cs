@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Peacock;
 
-namespace Ned;
+namespace Bohr;
 
 public static class ViewToControls
 {
@@ -21,14 +22,23 @@ public static class ViewToControls
         .AddConnectingBehavior();
 
     public static Control<NodeView> ToControl(this NodeView self)
-        => self.ToControl(ViewDrawing.DrawNode, (view) => view.SlotViews.Select(ToControl).Cast<IControl>().Append(view.HeaderView.ToControl()))
+        => self.ToControl(ViewDrawing.DrawNode, (view) =>
+                view.SlotViews
+                    .Select(ToControl)
+                    .Cast<IControl>()
+                    .Append(view.HeaderView.ToControl())
+                    .Append(new TextControl(new(
+                        self.Rect.Top + 30,
+                        self.Rect.Y,
+                        self.Rect.Width,
+                        40))))
         .AddDraggingBehavior();
        
     public static Control<HeaderView> ToControl(this HeaderView self)
         => self.ToControl(ViewDrawing.DrawHeader, (view) => ToControls(view.LeftView, view.RightView));
 
     public static IEnumerable<IControl> ToControls(SocketView? a, SocketView? b)
-        => (new[] { a?.ToControl(), b?.ToControl() }).WhereNotNull();
+        => (new[] { a?.ToControl(), b?.ToControl() }).WhereNotNull<Control<SocketView>>();
 
     public static Control<SlotView> ToControl(this SlotView self)
         => self.ToControl(ViewDrawing.DrawSlot, (view) => ToControls(view.LeftView, view.RightView));

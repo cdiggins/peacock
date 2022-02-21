@@ -1,6 +1,7 @@
 ﻿using System.Windows;
+using Peacock;
 
-namespace Ned;
+namespace Bohr;
 
 // TODO: there is a set of mapping the views to actual controls 
 // It provides the styled details. For example given a SocketView, it can give the proper 

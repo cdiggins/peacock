@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 
-namespace Ned
+namespace Bohr
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml

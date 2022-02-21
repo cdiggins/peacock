@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Peacock;
 
-namespace Ned;
+namespace Bohr;
 
 public static class GraphExtensions
 {
@@ -13,7 +14,7 @@ public static class GraphExtensions
         => n.Slots.SelectMany(GetSockets);
 
     public static IEnumerable<Socket> GetSockets(this Slot s)
-        => (new[] { s.Left, s.Right }).WhereNotNull();
+        => (new[] { s.Left, s.Right }).WhereNotNull<Socket>();
 
     public static IReadOnlyDictionary<Guid, T> ToGuidLookup<T>(this IEnumerable<T> xs) where T : Element
         => xs.ToDictionary(x => x.Id, x => x);
@@ -28,5 +29,5 @@ public static class GraphExtensions
         => n.SlotViews.SelectMany(GetSocketViews);
 
     public static IEnumerable<SocketView> GetSocketViews(this SlotView s)
-        => (new[] { s.LeftView, s.RightView }).WhereNotNull();
+        => (new[] { s.LeftView, s.RightView }).WhereNotNull<SocketView>();
 }

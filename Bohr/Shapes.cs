@@ -1,7 +1,8 @@
 ﻿using System.Windows;
 using System.Windows.Media;
+using Peacock;
 
-namespace Ned;
+namespace Bohr;
 
 public class Shapes
 {
@@ -26,7 +27,7 @@ public class Shapes
     public RoundedRect Shape(NodeView view) => new(view.Rect, Dimensions.NodeRadius);
     public RoundedRect Shape(SlotView view) => new(view.Rect, Dimensions.SlotRadius);
     public RoundedRect Shape(HeaderView view) => new(view.Rect, Dimensions.NodeRadius);
-    public Ellipse Shape(SocketView view) => new(view.Point, Dimensions.SocketRadius);
+    public Ellipse Shape(SocketView view) => new((Point)view.Point, Dimensions.SocketRadius);
 
     public StyledEllipse NodeShadow(NodeView view) => new(
         new ShapeStyle(new BrushStyle(Color.FromArgb(0x66, 0x33, 0x33, 0x33)), Styles.TransparentPen),

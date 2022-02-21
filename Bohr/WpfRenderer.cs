@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Media;
+using Peacock;
 
-namespace Ned
+namespace Bohr
 {
     // TODO: this is stateful, so make it a "Unique" type when converting to Plato.
     

@@ -1,19 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Ned;
-
-public interface IUpdates
-{
-    IUpdates AddUpdate(Guid id, Func<IView, IView> func);
-    IReadOnlyDictionary<Guid, List<Func<IView, IView>>> Lookup { get; }
-}
+﻿namespace Peacock;
 
 public interface IBehavior
 {
     public double ZOrder { get; }
     public ICanvas Draw(IControl control, ICanvas canvas);
     public (IUpdates, IBehavior) ProcessInput(IControl control, IUpdates updates, InputEvent input);
+}
+
+public interface IUpdates
+{
+    IUpdates AddUpdate(Guid id, Func<IView, IView> func);
+    IReadOnlyDictionary<Guid, List<Func<IView, IView>>> Lookup { get; }
 }
 
 public record Behavior<TState>(
@@ -54,5 +51,5 @@ public static class BehaviorExensions
             }
             return (T)view;
         });
-
 }
+
