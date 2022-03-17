@@ -8,6 +8,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Repositories.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Collections.Immutable" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Peacock.Wpf\Peacock.Wpf.csproj" />
     <ProjectReference Include="..\Peacock\Peacock.csproj" />
   </ItemGroup>
 

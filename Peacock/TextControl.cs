@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 
 namespace Peacock;
 
@@ -23,7 +17,7 @@ public record TextView(
     public TextView AddText(string text) => this with { Text = Text + text };
 }
 
-public class TextInputBehavior : IBehavior
+public record TextInputBehavior : Behavior
 {
     public double ZOrder => 0;
     public ICanvas Draw(IControl control, ICanvas canvas) => canvas;
@@ -45,12 +39,9 @@ public class TextInputBehavior : IBehavior
 // TODO: handle delete, cut, copy, paste, highlight, navigate 
 // TODO: draw the flashing caret ... at the correct moment in time. 
 
-public class TextControl : Control<TextView>
+public record TextControl : BaseControl<TextView>
 {
-    public TextControl(Rect rect)
-        : base(new(rect), 0, Draw, null, null, new[] { new TextInputBehavior() })
-    {
-    }
+    public TextControl(TextView view) : base(view) { }
 
     public static ICanvas Draw(ICanvas canvas, TextView view)
     {
@@ -61,17 +52,17 @@ public class TextControl : Control<TextView>
 
         return canvas
             .Draw(new StyledRect(
-                    new ShapeStyle(
-                        new(Colors.Azure),
-                        new(new(Colors.DarkGray), 0.5)),
-                    new(view.Rect)))
-                .Draw(new StyledText(
-                    new TextStyle(
-                        new BrushStyle(Colors.Black),
-                        "Segoe UI",
-                        10,
-                        Alignment.LeftCenter), 
-                    view.Rect,
-                    view.Text));
+                new ShapeStyle(
+                    new(Colors.Azure),
+                    new(new(Colors.DarkGray), 0.5)),
+                new(view.Rect)))
+            .Draw(new StyledText(
+                new TextStyle(
+                    new BrushStyle(Colors.Black),
+                    "Segoe UI",
+                    10,
+                    Alignment.LeftCenter), 
+                view.Rect,
+                view.Text));
     }
 }

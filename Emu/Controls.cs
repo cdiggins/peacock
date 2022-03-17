@@ -1,11 +1,39 @@
-﻿using System;
-using System.Linq;
-using System.Windows;
-using System.Windows.Media;
-using Peacock;
+﻿using Peacock;
 
-namespace Bohr;
+namespace Emu;
 
+public record GraphControl(GraphView View) 
+    : BaseControl<GraphView>(View);
+
+public record SocketControl(SocketView View) 
+    : BaseControl<SocketView>(View)
+{
+    public override ICanvas Draw(ICanvas canvas) 
+        => canvas.DrawSocket(View);
+}
+
+public record SlotControl(SlotView View) 
+    : BaseControl<SlotView>(View)
+{
+    public override ICanvas Draw(ICanvas canvas) 
+        => canvas.DrawSlot(View);
+}
+
+public record NodeControl(NodeView View) 
+    : BaseControl<NodeView>(View)
+{
+    public override ICanvas Draw(ICanvas canvas) 
+        => canvas.DrawNode(View);
+}
+
+public record ConnectionControl(ConnectionView View)
+    : BaseControl<ConnectionView>(View)
+{
+    public override ICanvas Draw(ICanvas canvas) 
+        => canvas.DrawConnection(View);
+}
+
+/*
 public record DragState(bool IsDragging = false, Point ControlStart = new(), Point MouseDragStart = new());
 
 public record ConnectingState(bool IsDragging = false, SocketView? Source = null, Point Current = new(), bool StartingFromSource = true)
@@ -135,3 +163,4 @@ public static class Behaviors
         return control.AddBehavior(behavior);
     }
 }
+*/

@@ -142,19 +142,19 @@ public static class Extensions
 
     public static Point GetAlignedLocation(this Rect rect, Size size, Alignment alignment)
         =>
-        new(
-            alignment.X switch
-            {
-                AlignmentX.Right => rect.Right - size.Width,
-                AlignmentX.Center => Center(rect).X - size.HalfWidth(),
-                _ => rect.Left
-            },
-            alignment.Y switch
-            {
-                AlignmentY.Bottom => rect.Bottom - size.Height,
-                AlignmentY.Center => Center(rect).Y - size.HalfHeight(),
-                _ => rect.Top
-            });
+            new(
+                alignment.X switch
+                {
+                    AlignmentX.Right => rect.Right - size.Width,
+                    AlignmentX.Center => Center(rect).X - size.HalfWidth(),
+                    _ => rect.Left
+                },
+                alignment.Y switch
+                {
+                    AlignmentY.Bottom => rect.Bottom - size.Height,
+                    AlignmentY.Center => Center(rect).Y - size.HalfHeight(),
+                    _ => rect.Top
+                });
 
     public static bool NonZero(this Rect self)
         => self.Width > 0 && self.Height > 0;
@@ -191,4 +191,7 @@ public static class Extensions
 
     public static IReadOnlyList<T> Remove<T>(this IReadOnlyList<T> self, T item)
         => self.Where(x => x != null && !ReferenceEquals(x, item) && !x.Equals(item)).ToList();
+
+    public static IControl With<TView>(this BaseControl<TView> control, Func<TView, TView> viewFunc) where TView: IView
+        => control.With(viewFunc(control.View));
 }

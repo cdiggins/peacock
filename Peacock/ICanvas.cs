@@ -7,6 +7,14 @@ namespace Peacock;
 public record Alignment(AlignmentX X, AlignmentY Y)
 {
     public static Alignment LeftCenter => new(AlignmentX.Left, AlignmentY.Center);
+    public static Alignment CenterCenter => new(AlignmentX.Center, AlignmentY.Center);
+    public static Alignment RightCenter => new(AlignmentX.Right, AlignmentY.Center);
+    public static Alignment LeftTop => new(AlignmentX.Left, AlignmentY.Top);
+    public static Alignment CenterTop => new(AlignmentX.Center, AlignmentY.Top);
+    public static Alignment RightTop => new(AlignmentX.Right, AlignmentY.Top);
+    public static Alignment LeftBottom => new(AlignmentX.Left, AlignmentY.Bottom);
+    public static Alignment CenterBottom => new(AlignmentX.Center, AlignmentY.Bottom);
+    public static Alignment RightBottom => new(AlignmentX.Right, AlignmentY.Bottom);
 }
 
 public record WindowProps(Rect Rect, string Title, Cursor Cursor);
@@ -41,6 +49,10 @@ public record Radius(double X, double Y)
     public Radius(double r) : this(r, r) { }
 }
 
+/// <summary>
+/// A drawing abstraction.
+/// This can be used to support different drawing platforms. 
+/// </summary>
 public interface ICanvas
 {
     ICanvas Draw(StyledText text);

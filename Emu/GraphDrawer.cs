@@ -3,13 +3,10 @@ using System.Windows;
 using System.Windows.Media;
 using Peacock;
 
-namespace Bohr;
+namespace Emu;
 
 public static class ViewDrawing
 {
-    // TODO: we can't have this as a static if we want to have dynamic theming etc. 
-    public static Shapes Shapes => new(new());
-
     public static Geometry ConnectorGeometry(Point a, Point b)
     {
         var xDelta = Math.Abs(a.X - b.X);
@@ -35,24 +32,30 @@ public static class ViewDrawing
 
     public static ICanvas DrawNode(this ICanvas canvas, NodeView view)
         => canvas
-            .Draw(Shapes.NodeShadow(view))
-            .Draw(Shapes.StyledShape(view));
+            .Draw(NodeShadow(view))
+            .Draw(StyledShape(view));
     
-    public static ICanvas DrawHeader(this ICanvas canvas, HeaderView view)
-        => canvas.Draw(Shapes.StyledShape(view)).Draw(Shapes.StyledText(view));
+    public static ICanvas DrawHeaderSlot(this ICanvas canvas, SlotView view)
+        => canvas
+            .Draw(StyledShape(view))
+            .Draw(StyledText(view));
 
     public static ICanvas DrawSlot(this ICanvas canvas, SlotView view)
+        => view.Slot.IsHeader 
+            ? DrawHeaderSlot(canvas, view) 
+            : DrawNonHeaderSlot(canvas, view);
+
+    public static ICanvas DrawNonHeaderSlot(this ICanvas canvas, SlotView view)
         => canvas
-            .Draw(Shapes.StyledShape(view))
-            .Draw(Shapes.StyledText(view))
-            .Draw(Shapes.StyledTypeText(view));
+            .Draw(StyledShape(view))
+            .Draw(StyledText(view))
+            .Draw(StyledTypeText(view));
 
     public static ICanvas DrawSocket(this ICanvas canvas, SocketView view)
         => view.Socket.Type == "Array" 
-            ? canvas.Draw(Shapes.StyledShapeArraySocket(view))
-            : canvas.Draw(Shapes.StyledShape(view));
+            ? canvas.Draw(StyledShapeArraySocket(view))
+            : canvas.Draw(StyledShape(view));
 
     public static ICanvas DrawConnection(this ICanvas canvas, ConnectionView view)
-        => canvas.DrawConnection(view.Line.A, view.Line.B, Colors.Crimson);
+        => canvas.DrawConnection(view.Line.A, view.Line.B, view.Style.ShapeStyle.Color);
 }
-

@@ -1,26 +1,19 @@
-﻿using System;
+﻿using Peacock;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Bohr
+namespace Emu;
+
+public class TestData
 {
-    public class TestData
-    {
-        public static IReadOnlyList<Node> TestNodes
-            => CreateNodes(Text).ToList();
-
-        // Some things derive from other things 
-
-        public static string Text =
+    public static string Text =
             
-@"Point 2D
+        @"Point 2D
 * Value *
 * X : Number *
 * Y : Number *
-  Values[] *";
-
-            public static string MoreText = 
-                @"--
+  Values[] *
+--
 Mouse
   Position : Point 2D *
   Left : Boolean *
@@ -247,62 +240,69 @@ Transform 2D
 * Scale : Size 2D * 
 * Rotation : Angle *
 ";
-        public static IEnumerable<Node> CreateNodes(string s)
-            => s.Split("--").Where(x => !string.IsNullOrWhiteSpace(x)).Select(CreateNode);
 
-        public static Slot CreateSlot(string s, string nodeName)
+    public static (IObjectStore, IEnumerable<Node>) CreateNodes(IObjectStore store, string s)
+    {
+        var nodes = new List<Node>();
+        foreach (var subString in s.Split("--").Where(x => !string.IsNullOrWhiteSpace(x)))
         {
-            s = s.Trim();
-
-            var hasLeftSocket = s.StartsWith("*");
-            var hasRightSocket = s.EndsWith("*");
-
-            s = s.TrimStart('*', ' ').TrimEnd('*', ' ').Trim();
-
-            var n = s.IndexOf(':');
-            var name = s.Trim();
-            var type = nodeName.Trim();
-
-            if (n >= 0)
-            {
-                name = s.Substring(0, n - 1).Trim();
-                type = s.Substring(n + 1).Trim();
-            }
-
-            return new Slot(name, type, hasLeftSocket ? new Socket(type, true) : null, hasRightSocket ? new Socket(type, false) : null);
+            (store, var node) = CreateNode(store, subString);
+            nodes.Add(node);
         }
 
-        public static Node CreateNode(string s)
-            => CreateNode(s.Trim().Split('\n', System.StringSplitOptions.RemoveEmptyEntries));
+        return (store, nodes);
+    }
 
-        public static Node CreateNode(IEnumerable<string> contents)
+    public static (IObjectStore, Slot) CreateSlot(IObjectStore store, string s, string nodeName, bool isHeader)
+    {
+        s = s.Trim();
+
+        var hasLeftSocket = s.StartsWith("*");
+        var hasRightSocket = s.EndsWith("*");
+
+        s = s.TrimStart('*', ' ').TrimEnd('*', ' ').Trim();
+
+        var n = s.IndexOf(':');
+        var name = s.Trim();
+        var type = nodeName.Trim();
+
+        if (n >= 0)
         {
-            var label = contents.First().Trim();
-            contents = contents.Skip(1);
-            var first = contents.First().Trim();
-            var slot = CreateSlot(first, label);
-            var kind = NodeKind.OperatorSet;             
-            var header = new Header(label, null, null);
-
-            if (slot.Label == "Value")
-            {
-                header = new Header(slot.Type, slot.Left, slot.Right);
-                contents = contents.Skip(1);
-                kind = NodeKind.PropertySet;
-            }
-
-            var r = new Node(label, kind, header, contents.Select(c => CreateSlot(c, label)).ToList());
-
-            if (!r.Slots.Any(s => s.Left != null))
-            {
-                r = r with { Kind = NodeKind.Output };
-            }
-            if (!r.Slots.Any(s => s.Right != null))
-            {
-                r = r with { Kind = NodeKind.Input };
-            }
-
-            return r;
+            name = s.Substring(0, n - 1).Trim();
+            type = s.Substring(n + 1).Trim();
         }
+
+        var leftSocket = hasLeftSocket ? new Socket(type, true) : null;
+        var rightSocket = hasRightSocket ? new Socket(type, false) : null;
+        store = leftSocket == null ? store : store.Add(leftSocket);
+        store = rightSocket == null ? store : store.Add(rightSocket);
+        var slot = new Slot(name, type, isHeader, leftSocket, rightSocket);
+        return (store.Add(slot), slot);
+    }
+
+    public static (IObjectStore, Node) CreateNode(IObjectStore store, string s)
+        => CreateNode(store, s.Trim().Split('\n', System.StringSplitOptions.RemoveEmptyEntries).ToList());
+
+    public static (IObjectStore, Node) CreateNode(IObjectStore store, List<string> contents)
+    {
+        var label = contents[0].Trim();
+        const NodeKind kind = NodeKind.OperatorSet;             
+        var header = new Slot(label, label, true, null, null);
+        var slots = new List<Slot>();
+        foreach (var c in contents)
+        {
+            (store, var slot) = CreateSlot(store, c, label, false);
+            slots.Add(slot);
+        }
+
+        var r = new Node(label, kind, header, slots.ToRefList());
+        return (store.Add(r), r);
+    }
+
+    public static (IObjectStore, Graph) CreateGraph(IObjectStore? store = null)
+    {
+        store ??= new ObjectStore();
+        (store, var nodes) = CreateNodes(store, Text);
+        return (store, new Graph(nodes.ToRefList(), RefList<Connection>.Empty);
     }
 }
