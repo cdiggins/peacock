@@ -13,37 +13,20 @@ public record TextView(
     int SelCount = 0) : IView
 {
     public Guid Id { get; }
-    public IView Apply(Func<IView, IView> func) => func(this);
-    public TextView AddText(string text) => this with { Text = Text + text };
-}
 
-public record TextInputBehavior : Behavior
-{
-    public double ZOrder => 0;
-    public ICanvas Draw(IControl control, ICanvas canvas) => canvas;
-
-    public (IUpdates, IBehavior) ProcessInput(IControl control, IUpdates updates, InputEvent input)
-    {
-        if (input is KeyDownEvent keyDown)
-        {
-            updates = updates.AddUpdate(control.View.Id,
-                view => view is TextView textView
-                    ? textView.AddText(keyDown.Args.Key.ToString())
-                    : view);
-        }
-
-        return (updates, this);
-    }
+    public TextView AddText(string text) 
+        => this with { Text = Text + text };
 }
 
 // TODO: handle delete, cut, copy, paste, highlight, navigate 
 // TODO: draw the flashing caret ... at the correct moment in time. 
 
-public record TextControl : BaseControl<TextView>
+public record TextControl(TextView View) : Control<TextView>(View)
 {
-    public TextControl(TextView view) : base(view) { }
+    public override IView Process(IInputEvent input, IDispatcher dispatcher) 
+        => input is KeyDownEvent keyDown ? View.AddText(keyDown.Args.Key.ToString()) : View;
 
-    public static ICanvas Draw(ICanvas canvas, TextView view)
+    public override ICanvas Draw(ICanvas canvas)
     {
         // TODO: draw the text
         // TODO: draw the caret at the correct position
@@ -55,14 +38,14 @@ public record TextControl : BaseControl<TextView>
                 new ShapeStyle(
                     new(Colors.Azure),
                     new(new(Colors.DarkGray), 0.5)),
-                new(view.Rect)))
+                new(View.Rect)))
             .Draw(new StyledText(
                 new TextStyle(
                     new BrushStyle(Colors.Black),
                     "Segoe UI",
                     10,
-                    Alignment.LeftCenter), 
-                view.Rect,
-                view.Text));
+                    Alignment.LeftCenter),
+                View.Rect,
+                View.Text));
     }
 }

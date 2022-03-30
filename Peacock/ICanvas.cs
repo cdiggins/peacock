@@ -19,24 +19,28 @@ public record Alignment(AlignmentX X, AlignmentY Y)
 
 public record WindowProps(Rect Rect, string Title, Cursor Cursor);
 
-public record BrushStyle(Color Color);
-public record PenStyle(BrushStyle BrushStyle, double Width);
+public record BrushStyle(Color Color)
+{
+    public static implicit operator BrushStyle(Color color) => new(color);
+    public static BrushStyle Empty = Colors.Transparent;
+}
+
+public record PenStyle(BrushStyle BrushStyle, double Width)
+{
+    public static implicit operator PenStyle(Color color) => new(color, 1);
+    public static implicit operator PenStyle(BrushStyle brush) => new(brush, 1);
+    public static PenStyle Empty = Colors.Transparent;
+}
+
 public record TextStyle(BrushStyle BrushStyle, string FontFamily, double FontSize, Alignment Alignment);
 public record ShapeStyle(BrushStyle BrushStyle, PenStyle PenStyle);
 public record Line(Point A, Point B);
+public record Ellipse(Point Point, Radius Radius);
 
-public record Ellipse(Point Point, Radius Radius)
-{
-    public Ellipse(Point point, double radius)
-        : this(point, new Radius(radius, radius))
-    { }
-}
-    
 public record RoundedRect(Rect Rect, Radius Radius)
 {
-    public RoundedRect(Rect rect)
-        : this(rect, new(0,0))
-    { }
+    public RoundedRect(Rect rect) 
+        : this(rect, new(0,0)) { }
 }
 
 public record StyledText(TextStyle Style, Rect Rect, string Text);
@@ -64,3 +68,4 @@ public interface ICanvas
     ICanvas SetRect(Rect rect);
     ICanvas PopRect();
 }
+

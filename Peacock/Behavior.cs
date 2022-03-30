@@ -1,8 +1,11 @@
 ﻿namespace Peacock;
 
 /// <summary>
-/// A behavior is associated with a control and can provide additional drawing capabilities.
-/// Multiple behaviors can be applied to a control. 
+/// A behavior is associated with a control and provide additional capabilities,
+/// not defined in the control itself. You can think of it as a generalization of
+/// event handling. Rather than connecting to one event at a time,
+/// a behavior can handle any number of special types and manage its own state. 
+/// Behaviors also can be drawn. 
 /// A behavior can process input and update itself in response to user input.
 /// Some example use cases of behaviors:
 /// * Drawing a border
@@ -12,9 +15,17 @@
 /// * Managing and representing enabled/disabled state. 
 /// * Making a control draggable
 /// </summary>
-public interface IBehavior : IObject
+public interface IBehavior
 {
-    public ICanvas Draw(IControl control, ICanvas canvas);
-    public (IUpdates, IBehavior) ProcessInput(IControl control, IUpdates updates, InputEvent input);
+    ICanvas Draw(IControl control, ICanvas canvas);
+    IBehavior ProcessInput(IControl control, InputEvent input, IDispatcher dispatcher);
 }
 
+public record Behavior : IBehavior
+{
+    public virtual ICanvas Draw(IControl control, ICanvas canvas)
+        => canvas;
+
+    public virtual IBehavior ProcessInput(IControl control, InputEvent input, IDispatcher dispatcher)
+        => this;
+}

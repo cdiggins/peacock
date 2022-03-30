@@ -1,4 +1,5 @@
-﻿using Peacock;
+﻿using System;
+using Peacock;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -295,7 +296,7 @@ Transform 2D
             slots.Add(slot);
         }
 
-        var r = new Node(label, kind, header, slots.ToRefList());
+        var r = new Node(label, kind, header, slots);
         return (store.Add(r), r);
     }
 
@@ -303,6 +304,6 @@ Transform 2D
     {
         store ??= new ObjectStore();
         (store, var nodes) = CreateNodes(store, Text);
-        return (store, new Graph(nodes.ToRefList(), RefList<Connection>.Empty);
+        return (store, new Graph(nodes.ToList(), Array.Empty<Connection>()));
     }
 }

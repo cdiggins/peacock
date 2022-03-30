@@ -9,8 +9,8 @@ public static class Extensions
     public static Rect Shrink(this Rect r, Rect padding)
         => Shrink(r, padding.Left, padding.Top, padding.Right, padding.Bottom);
 
-    public static Rect Shrink(this Rect r, double left, double top, double right, double bottom)
-        => new Rect(r.Left + left, r.Top + top, r.Width - left - right, r.Height - top - bottom);
+    public static Rect Shrink(this Rect r, double left, double top, double right, double bottom) => new(r.Left + left,
+        r.Top + top, r.Width - left - right, r.Height - top - bottom);
 
     public static Rect Shrink(this Rect r, double padding)
         => Shrink(r, padding, padding, padding, padding);
@@ -191,7 +191,4 @@ public static class Extensions
 
     public static IReadOnlyList<T> Remove<T>(this IReadOnlyList<T> self, T item)
         => self.Where(x => x != null && !ReferenceEquals(x, item) && !x.Equals(item)).ToList();
-
-    public static IControl With<TView>(this BaseControl<TView> control, Func<TView, TView> viewFunc) where TView: IView
-        => control.With(viewFunc(control.View));
 }

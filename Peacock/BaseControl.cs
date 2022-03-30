@@ -1,17 +1,10 @@
-﻿using System.Reflection;
+﻿namespace Peacock;
 
-namespace Peacock;
-
-public abstract record BaseControl<TView> : Object, IControl
+public record Control<TView>(TView View) : IControl 
     where TView : IView
 {
-    protected BaseControl(TView view) => (View, Ctor) = (view, GetType().GetConstructor(new[] { typeof(TView) })!);
-    public TView View { get; }
-    IView IControl.View => View!;
+    IView IControl.View => View;
     public virtual ICanvas Draw(ICanvas canvas) => canvas;
-    IView IControl.Process(IInputEvent input) => Process(input)!;
-    public IControl With(IView view) => With((TView)view);
-    public virtual TView Process(IInputEvent input) => View;
-    public ConstructorInfo Ctor { get; }
-    public virtual IControl With(TView view) => (IControl)Ctor.Invoke(new object?[] { View });
+    public virtual IEnumerable<IControl> GetChildren(IControlFactory factory) => Enumerable.Empty<IControl>();
+    public virtual IView Process(IInputEvent input, IDispatcher dispatcher) => View;
 }

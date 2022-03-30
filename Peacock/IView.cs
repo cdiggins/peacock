@@ -1,5 +1,8 @@
-﻿namespace Peacock;
+﻿using System.Windows;
 
-public interface IView : IObject
+namespace Peacock;
+
+public interface IView 
 {
+    Rect Rect { get; }
 }

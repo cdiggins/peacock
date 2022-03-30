@@ -11,10 +11,10 @@ public record WpfRenderer : ICanvas
 {
     public DrawingContext? Context { get; set; }
 
-    public Dictionary<BrushStyle, Brush> Brushes = new Dictionary<BrushStyle, Brush>();
-    public Dictionary<PenStyle, Pen> Pens = new Dictionary<PenStyle, Pen>();
-    public Dictionary<TextStyle, Typeface> Typefaces = new Dictionary<TextStyle, Typeface>();
-    public Dictionary<StyledText, FormattedText> FormattedTexts = new Dictionary<StyledText, FormattedText>();
+    public Dictionary<BrushStyle, Brush> Brushes = new();
+    public Dictionary<PenStyle, Pen> Pens = new();
+    public Dictionary<TextStyle, Typeface> Typefaces = new();
+    public Dictionary<StyledText, FormattedText> FormattedTexts = new();
 
     public WpfRenderer(DrawingContext? context = null)
         => Context = context;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Windows;
 using System.Windows.Controls;
@@ -18,13 +19,14 @@ namespace Emu;
 /// </summary>
 public partial class GraphUserControl : UserControl
 {
-    public ControlManager Manager;
-    public ObjectStore DataStore = new();
+    public IObjectStore Store;
+    public IControlFactory Factory = new ControlFactory();
+    public IControl Control;
     public WpfRenderer Renderer = new();
     public int WheelZoom = 0;
     public double ZoomFactor => Math.Pow(1.15, WheelZoom / 120.0);
 
-    public DispatcherTimer Timer = new DispatcherTimer
+    public DispatcherTimer Timer = new()
     {
         Interval = TimeSpan.FromMilliseconds(25)
     };
@@ -50,14 +52,11 @@ public partial class GraphUserControl : UserControl
         // TODO: I have to create a RefList of Nodes and Connections. 
         // This indicates I have an object store for the model. I suppose that makes sense. 
         // Like the ControlManager. 
-
-        var factory = new ControlFactory();
-        Manager = new ControlManager();
-
-        (var store, var graph) = TestData.CreateGraph(new ObjectStore());
+        
+        (Store, var graph) = TestData.CreateGraph(new ObjectStore());
 
         // TODO: isn't this going to be created by a control manager? 
-        _graphControl = new GraphView(graph).ToControl();
+        Control = Factory.CreateControl(null, graph);
             
 
         //(this.Parent as Window).PreviewKeyDown += (sender, args) => Console.WriteLine("Parent key press");
@@ -94,25 +93,26 @@ public partial class GraphUserControl : UserControl
         var scaleTransform = new ScaleTransform(ZoomFactor, ZoomFactor);
         drawingContext.PushTransform(scaleTransform);
         Renderer.Context = drawingContext;            
-        Renderer.Draw(Manager);
+        
+        //Renderer.Draw(Manager);
+
         drawingContext.Pop();
         drawingContext.Pop();
         base.OnRender(drawingContext);
     }
 
-    public class Updates : IUpdates
+    [Mutable]
+    public class Dispatcher : IDispatcher
     {
         public Dictionary<Guid, List<Func<IView, IView>>> _lookup { get; } = new();
-        public IReadOnlyDictionary<Guid, List<Func<IView, IView>>> Lookup => _lookup;
 
-        public IUpdates AddUpdate(Guid id, Func<IView, IView> func)
+        public void UpdateView(Guid id, Func<IView, IView> updateFunc)
         {
-            if (!Lookup.ContainsKey(id))
+            if (!_lookup.ContainsKey(id))
             {
                 _lookup.Add(id, new());
             }
-            _lookup[id].Add(func);
-            return this;
+            _lookup[id].Add(updateFunc);
         }
     }
 
@@ -124,8 +124,10 @@ public partial class GraphUserControl : UserControl
             WheelZoom += mwe.Args.Delta;
         }
 
-        var updates = new Updates() as IUpdates;
+        var updates = new Dispatcher();
         inputEvent.MouseStatus = new MouseStatus(this);
+
+        /*
         (var newGraphControl, updates) = _graphControl.ProcessInput(updates, inputEvent);
         if (newGraphControl == _graphControl)
             return;
@@ -133,7 +135,8 @@ public partial class GraphUserControl : UserControl
 
         var newView = _graphControl.View.ApplyUpdates(updates);
         _graphControl = _graphControl.UpdateView(newView);
-            
+        */  
+
         InvalidateVisual();
     }
 }

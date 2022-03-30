@@ -12,7 +12,7 @@ public interface IDictionaryOfLists<T1, T2>
 public class DictionaryOfLists<T1, T2> : IDictionaryOfLists<T1, T2>
     where T1 : notnull
 {
-    private readonly Dictionary<T1, List<T2>> _lookup = new Dictionary<T1, List<T2>>();
+    private readonly Dictionary<T1, List<T2>> _lookup = new();
 
     public DictionaryOfLists()
     {}
