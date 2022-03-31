@@ -267,6 +267,7 @@ Transform 2D
     public static int SlotRadius = 5;
 
     public static double GetNodeHeight(int slots) => NodeHeaderHeight + slots * NodeSlotHeight;
+    public static Rect GetNodeHeaderRect(Rect nodeRect) => new(nodeRect.TopLeft, new Size(nodeRect.Width, NodeHeaderHeight));
     public static Rect GetSocketRect(Rect slotRect, bool leftOrRight) => GetSocketRect(leftOrRight ? slotRect.LeftCenter() : slotRect.RightCenter());
     public static Rect GetSocketRect(Point point) => new(point.X - SlotRadius, point.Y - SlotRadius, SlotRadius * 2, SlotRadius * 2);
     public static Rect GetSlotRect(Rect rect, int i) => new(rect.Left, rect.Top + NodeHeaderHeight + i * NodeSlotHeight, rect.Width, NodeSlotHeight);
@@ -290,8 +291,8 @@ Transform 2D
         }
 
         var slotRect = GetSlotRect(nodeRect, index);
-        var leftSocket = hasLeftSocket ? new Socket(NewGuid(), slotRect, type, true) : null;
-        var rightSocket = hasRightSocket ? new Socket(NewGuid(), slotRect, type, false) : null;
+        var leftSocket = hasLeftSocket ? new Socket(NewGuid(), GetSocketRect(slotRect, true), type, true) : null;
+        var rightSocket = hasRightSocket ? new Socket(NewGuid(), GetSocketRect(slotRect, false), type, false) : null;
         store = leftSocket == null ? store : store.Add(leftSocket);
         store = rightSocket == null ? store : store.Add(rightSocket);
         var slot = new Slot(NewGuid(), slotRect, name, type, isHeader, leftSocket, rightSocket);
@@ -308,7 +309,7 @@ Transform 2D
         const NodeKind kind = NodeKind.OperatorSet;
 
         var rect = new Rect(pos, new Size(NodeWidth, GetNodeHeight(contents.Count)));
-        var header = new Slot(new Guid(), rect, label, label, true, null, null);
+        var header = new Slot(new Guid(), GetNodeHeaderRect(rect), label, label, true, null, null);
         var slots = new List<Slot>();
         for (var i=0; i < contents.Count; ++i)
         {

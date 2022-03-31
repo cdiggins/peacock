@@ -9,6 +9,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using Peacock;
 using Peacock.Wpf;
+using Dispatcher = Peacock.Dispatcher;
 
 namespace Emu;
 
@@ -24,6 +25,7 @@ public partial class GraphUserControl : UserControl
     public WpfRenderer Renderer = new();
     public int WheelZoom = 0;
     public double ZoomFactor => Math.Pow(1.15, WheelZoom / 120.0);
+    public Graph Graph;
 
     public DispatcherTimer Timer = new()
     {
@@ -52,11 +54,7 @@ public partial class GraphUserControl : UserControl
         // This indicates I have an object store for the model. I suppose that makes sense. 
         // Like the ControlManager. 
         
-        var graph = TestData.CreateGraph(Store);
-
-        // TODO: isn't this going to be created by a control manager? 
-        Control = Factory.Create(null, graph);
-            
+        Graph = TestData.CreateGraph(Store);
 
         //(this.Parent as Window).PreviewKeyDown += (sender, args) => Console.WriteLine("Parent key press");
         PreviewKeyDown += (sender, args) => ProcessInput(new KeyDownEvent(args));
@@ -84,6 +82,14 @@ public partial class GraphUserControl : UserControl
         base.OnPreviewKeyDown(e);
     }
 
+    public static void Draw(ICanvas canvas, IControlFactory factory, IControl control)
+    {
+        control.Draw(canvas);
+        var children = control.GetChildren(factory);
+        foreach (var child in children)
+            Draw(canvas, factory, child);
+    }
+
     protected override void OnRender(DrawingContext drawingContext)
     {
         var rect = new Rect(new(), RenderSize);
@@ -91,9 +97,10 @@ public partial class GraphUserControl : UserControl
         drawingContext.DrawRectangle(new SolidColorBrush(Colors.SlateGray), new Pen(), rect);
         var scaleTransform = new ScaleTransform(ZoomFactor, ZoomFactor);
         drawingContext.PushTransform(scaleTransform);
-        Renderer.Context = drawingContext;            
-        
-        //Renderer.Draw(Manager);
+        Renderer.Context = drawingContext;
+
+        var rootControl = Factory.Create(null, Graph);
+        Draw(Renderer, Factory, rootControl);
 
         drawingContext.Pop();
         drawingContext.Pop();

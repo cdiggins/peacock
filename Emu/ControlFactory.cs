@@ -62,8 +62,8 @@ public record ControlFactory : IControlFactory
             
             Slot s 
                 => s.IsHeader 
-                    ? new SlotControl(new(s, SlotStyle))
-                    : new SlotControl(new(s, HeaderStyle)),
+                    ? new SlotControl(new(s, HeaderStyle))
+                    : new SlotControl(new(s, SlotStyle)),
             
             Connection c 
                 => new ConnectionControl(new(c, ConnectionStyle)),

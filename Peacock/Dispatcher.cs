@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Peacock;
-
-namespace Emu;
+﻿namespace Peacock;
 
 [Mutable]
 public class Dispatcher : IDispatcher
