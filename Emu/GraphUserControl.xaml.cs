@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
@@ -19,7 +18,7 @@ namespace Emu;
 /// </summary>
 public partial class GraphUserControl : UserControl
 {
-    public IObjectStore Store;
+    public IObjectStore Store = new ObjectStore();
     public IControlFactory Factory = new ControlFactory();
     public IControl Control;
     public WpfRenderer Renderer = new();
@@ -53,10 +52,10 @@ public partial class GraphUserControl : UserControl
         // This indicates I have an object store for the model. I suppose that makes sense. 
         // Like the ControlManager. 
         
-        (Store, var graph) = TestData.CreateGraph(new ObjectStore());
+        var graph = TestData.CreateGraph(Store);
 
         // TODO: isn't this going to be created by a control manager? 
-        Control = Factory.CreateControl(null, graph);
+        Control = Factory.Create(null, graph);
             
 
         //(this.Parent as Window).PreviewKeyDown += (sender, args) => Console.WriteLine("Parent key press");
@@ -99,21 +98,6 @@ public partial class GraphUserControl : UserControl
         drawingContext.Pop();
         drawingContext.Pop();
         base.OnRender(drawingContext);
-    }
-
-    [Mutable]
-    public class Dispatcher : IDispatcher
-    {
-        public Dictionary<Guid, List<Func<IView, IView>>> _lookup { get; } = new();
-
-        public void UpdateView(Guid id, Func<IView, IView> updateFunc)
-        {
-            if (!_lookup.ContainsKey(id))
-            {
-                _lookup.Add(id, new());
-            }
-            _lookup[id].Add(updateFunc);
-        }
     }
 
     public void ProcessInput<T>(T inputEvent)

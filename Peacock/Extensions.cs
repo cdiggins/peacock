@@ -95,9 +95,6 @@ public static class Extensions
     public static Rect Resize(this Rect rect, Size size)
         => new(rect.Location, size);
 
-    public static Point BottomCenter(this Rect rect)
-        => new(Center(rect).X, rect.Bottom);
-
     public static Rect MoveTo(this Rect rect, Point point)
         => new(point, rect.Size);
 
@@ -130,6 +127,18 @@ public static class Extensions
 
     public static Point Center(this Rect r)
         => new(r.Left + r.HalfWidth(), r.Top + r.HalfHeight());
+
+    public static Point LeftCenter(this Rect r)
+        => new(r.Left, r.Top + r.HalfHeight());
+
+    public static Point RightCenter(this Rect r)
+        => new(r.Right, r.Top + r.HalfHeight());
+
+    public static Point TopCenter(this Rect r)
+        => new(r.Left + r.HalfWidth(), r.Top);
+
+    public static Point BottomCenter(this Rect r)
+        => new(r.Left + r.HalfWidth(), r.Bottom);
 
     public static Size Half(this Size size)
         => new(size.HalfWidth(), size.HalfHeight());

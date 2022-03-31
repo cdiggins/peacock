@@ -6,6 +6,6 @@
         xmlns:emu="clr-namespace:Emu"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <emu:GraphControl x:Name="GraphControl">
-    </emu:GraphControl>
+    <emu:GraphUserControl x:Name="GraphControl">
+    </emu:GraphUserControl>
 </Window>

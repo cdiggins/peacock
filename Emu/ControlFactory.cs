@@ -29,10 +29,6 @@ public record ControlFactory : IControlFactory
             _ => Colors.Gray
         };
 
-    public double NodeWidth { get; init; } = 110; 
-    public double NodeSlotHeight { get; init; } = 20;
-    public double NodeHeaderHeight { get; init; } = 25;
-
     public static TextStyle DefaultTextStyle = new(Colors.Black, "Segoe UI", 12, new(AlignmentX.Left, AlignmentY.Center));
     public static ShapeStyle DefaultShapeStyle = new(Colors.DarkSeaGreen, new(Colors.DarkOrange, 0.5));
 
@@ -41,10 +37,10 @@ public record ControlFactory : IControlFactory
     public static TextStyle DefaultSlotTypeTextStyle => DefaultTextStyle with { FontSize = 8, Alignment = Alignment.RightTop };
     public static TextStyle DefaultSocketTextStyle => DefaultTextStyle with { FontSize = 6, Alignment = Alignment.RightTop };
 
-    public static NodeStyle DefaultNodeStyle => new(DefaultShapeStyle, DefaultTextStyle, new(new(110, 25)), new(0), Color.FromArgb(0x66, 0x33, 0x33, 0x33));
-    public static SocketStyle DefaultSocketStyle => new(DefaultShapeStyle, DefaultSocketTextStyle, new(new(6, 6)), new(6, 6)); 
-    public static SlotStyle DefaultSlotStyle => new(DefaultShapeStyle, DefaultSlotTextStyle, DefaultSlotTypeTextStyle, new(new(110, 25)), new(8));
-    public static SlotStyle DefaultHeaderStyle => new(DefaultShapeStyle, DefaultHeaderTextStyle, DefaultSlotTypeTextStyle, new(new(110, 25)), new(8));
+    public static NodeStyle DefaultNodeStyle => new(DefaultShapeStyle, DefaultTextStyle, 0, Color.FromArgb(0x66, 0x33, 0x33, 0x33));
+    public static SocketStyle DefaultSocketStyle => new(DefaultShapeStyle, DefaultSocketTextStyle, 6); 
+    public static SlotStyle DefaultSlotStyle => new(DefaultShapeStyle, DefaultSlotTextStyle, DefaultSlotTypeTextStyle, 8);
+    public static SlotStyle DefaultHeaderStyle => new(DefaultShapeStyle, DefaultHeaderTextStyle, DefaultSlotTypeTextStyle, 8);
 
     public SocketStyle SocketStyle { get; init; } = DefaultSocketStyle;
     public SlotStyle SlotStyle { get; init; } = DefaultSlotStyle;
@@ -55,31 +51,25 @@ public record ControlFactory : IControlFactory
     
     public GraphStyle GraphStyle { get; init; } = new(DefaultShapeStyle, DefaultTextStyle);
 
-    public double GetNodeHeight(int slots) => NodeHeaderHeight + slots * NodeSlotHeight;
-    public Rect GetNodeRect(Node node) => new(0, 0, NodeWidth, GetNodeHeight(node.Slots.Count));
-
-    // TODO: how do I get the correct dimensions for the slots and connections, etc. 
-    // I will need 
-
-    public IControl CreateControl(IControl parent, Rect rect, IModel model)
+    public IControl Create(IControl? parent, IModel model)
         => model switch
         {
             Graph g 
                 => new GraphControl(new(g, GraphStyle)),
             
             Node n  
-                => new NodeControl(new(n, GetNodeRect(n), NodeStyle)),
+                => new NodeControl(new(n, NodeStyle)),
             
             Slot s 
                 => s.IsHeader 
-                    ? new SlotControl(new(s, new(), SlotStyle))
-                    : new SlotControl(new(s, new(), HeaderStyle)),
+                    ? new SlotControl(new(s, SlotStyle))
+                    : new SlotControl(new(s, HeaderStyle)),
             
             Connection c 
-                => new ConnectionControl(new(c, new(new(),new()), ConnectionStyle)),
+                => new ConnectionControl(new(c, ConnectionStyle)),
 
             Socket k 
-                => new SocketControl(new(k, new(), SocketStyle)),
+                => new SocketControl(new(k, SocketStyle)),
 
             _ 
                 => throw new NotImplementedException("Unrecognized model")

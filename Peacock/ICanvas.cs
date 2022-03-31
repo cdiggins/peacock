@@ -35,12 +35,17 @@ public record PenStyle(BrushStyle BrushStyle, double Width)
 public record TextStyle(BrushStyle BrushStyle, string FontFamily, double FontSize, Alignment Alignment);
 public record ShapeStyle(BrushStyle BrushStyle, PenStyle PenStyle);
 public record Line(Point A, Point B);
-public record Ellipse(Point Point, Radius Radius);
+
+public record Ellipse(Point Point, Radius Radius)
+{
+    public Ellipse(Rect rect) : this(rect.Center(), new(rect.HalfWidth(), rect.HalfHeight())) { }
+    public static implicit operator Ellipse(Rect rect) => new(rect);
+}
 
 public record RoundedRect(Rect Rect, Radius Radius)
 {
-    public RoundedRect(Rect rect) 
-        : this(rect, new(0,0)) { }
+    public RoundedRect(Rect rect) : this(rect, new(0,0)) { }
+    public static implicit operator RoundedRect(Rect rect) => new(rect);
 }
 
 public record StyledText(TextStyle Style, Rect Rect, string Text);
@@ -51,6 +56,7 @@ public record StyledEllipse(ShapeStyle Style, Ellipse Ellipse);
 public record Radius(double X, double Y)
 {
     public Radius(double r) : this(r, r) { }
+    public static implicit operator Radius(double x) => new(x);
 }
 
 /// <summary>
@@ -68,4 +74,3 @@ public interface ICanvas
     ICanvas SetRect(Rect rect);
     ICanvas PopRect();
 }
-

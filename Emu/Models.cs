@@ -28,6 +28,6 @@ public record Slot(Guid Id, Rect Rect, string Label, string Type, bool IsHeader,
 
 public record Socket(Guid Id, Rect Rect, string Type, bool LeftOrRight) : Model(Id);
 
-public record Connection(Guid Id, Guid SourceId, Guid DestinationId) : Model(Id);
+public record Connection(Guid Id, Line Line, Guid SourceId, Guid DestinationId) : Model(Id);
 
-public record Graph(Guid Id, Rect Rect, IReadOnlyList<Node> Nodes, IReadOnlyList<Connection> Connections) : Model(Id);
+public record Graph(Guid Id, IReadOnlyList<Node> Nodes, IReadOnlyList<Connection> Connections) : Model(Id);

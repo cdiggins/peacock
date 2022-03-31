@@ -4,9 +4,8 @@
 /// A model interface identifies data types as being used for the model,
 /// as opposed to the view, or some other role. 
 /// </summary>
-public interface IModel
+public interface IModel : IObject
 {
-    Guid Id { get; }
 }
 
 /// <summary>
@@ -18,5 +17,5 @@ public interface IModel
 /// </summary>
 public interface IControlFactory
 {
-    IControl CreateControl(IControl parent, IModel model);
+    IControl Create(IControl? parent, IModel model);
 }

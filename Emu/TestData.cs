@@ -2,9 +2,11 @@
 using Peacock;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 
 namespace Emu;
 
+[Mutable]
 public class TestData
 {
     public static string Text =
@@ -242,19 +244,33 @@ Transform 2D
 * Rotation : Angle *
 ";
 
-    public static (IObjectStore, IEnumerable<Node>) CreateNodes(IObjectStore store, string s)
+    public static IReadOnlyList<Node> CreateNodes(IObjectStore store, string s)
     {
         var nodes = new List<Node>();
+        var pos = new Point(20, 20);
         foreach (var subString in s.Split("--").Where(x => !string.IsNullOrWhiteSpace(x)))
         {
-            (store, var node) = CreateNode(store, subString);
+            // TODO: compute the Rect. 
+            var node = CreateNode(store, pos, subString);
+            pos = pos.Add(new Size(NodeWidth * 1.3, 0));
             nodes.Add(node);
         }
 
-        return (store, nodes);
+        return nodes;
     }
 
-    public static (IObjectStore, Slot) CreateSlot(IObjectStore store, string s, string nodeName, bool isHeader)
+    public static Guid NewGuid() => Guid.NewGuid();
+
+    public static int NodeHeaderHeight = 25;
+    public static int NodeSlotHeight = 20;
+    public static int NodeWidth = 110;
+    public static int SlotRadius = 5;
+
+    public static double GetNodeHeight(int slots) => NodeHeaderHeight + slots * NodeSlotHeight;
+    public static Rect GetSocketRect(Rect slotRect, bool leftOrRight) => GetSocketRect(leftOrRight ? slotRect.LeftCenter() : slotRect.RightCenter());
+    public static Rect GetSocketRect(Point point) => new(point.X - SlotRadius, point.Y - SlotRadius, SlotRadius * 2, SlotRadius * 2);
+    public static Rect GetSlotRect(Rect rect, int i) => new(rect.Left, rect.Top + NodeHeaderHeight + i * NodeSlotHeight, rect.Width, NodeSlotHeight);
+    public static Slot CreateSlot(IObjectStore store, Rect nodeRect, int index, string s, string nodeName, bool isHeader)
     {
         s = s.Trim();
 
@@ -273,37 +289,45 @@ Transform 2D
             type = s.Substring(n + 1).Trim();
         }
 
-        var leftSocket = hasLeftSocket ? new Socket(type, true) : null;
-        var rightSocket = hasRightSocket ? new Socket(type, false) : null;
+        var slotRect = GetSlotRect(nodeRect, index);
+        var leftSocket = hasLeftSocket ? new Socket(NewGuid(), slotRect, type, true) : null;
+        var rightSocket = hasRightSocket ? new Socket(NewGuid(), slotRect, type, false) : null;
         store = leftSocket == null ? store : store.Add(leftSocket);
         store = rightSocket == null ? store : store.Add(rightSocket);
-        var slot = new Slot(name, type, isHeader, leftSocket, rightSocket);
-        return (store.Add(slot), slot);
+        var slot = new Slot(NewGuid(), slotRect, name, type, isHeader, leftSocket, rightSocket);
+        store.Add(slot);
+        return slot;
     }
 
-    public static (IObjectStore, Node) CreateNode(IObjectStore store, string s)
-        => CreateNode(store, s.Trim().Split('\n', System.StringSplitOptions.RemoveEmptyEntries).ToList());
+    public static Node CreateNode(IObjectStore store, Point pos, string s)
+        => CreateNode(store, pos, s.Trim().Split('\n', StringSplitOptions.RemoveEmptyEntries).ToList());
 
-    public static (IObjectStore, Node) CreateNode(IObjectStore store, List<string> contents)
+    public static Node CreateNode(IObjectStore store, Point pos, List<string> contents)
     {
         var label = contents[0].Trim();
-        const NodeKind kind = NodeKind.OperatorSet;             
-        var header = new Slot(label, label, true, null, null);
+        const NodeKind kind = NodeKind.OperatorSet;
+
+        var rect = new Rect(pos, new Size(NodeWidth, GetNodeHeight(contents.Count)));
+        var header = new Slot(new Guid(), rect, label, label, true, null, null);
         var slots = new List<Slot>();
-        foreach (var c in contents)
+        for (var i=0; i < contents.Count; ++i)
         {
-            (store, var slot) = CreateSlot(store, c, label, false);
+            var c = contents[i];
+            var slot = CreateSlot(store, rect, i, c, label, false);
             slots.Add(slot);
         }
 
-        var r = new Node(label, kind, header, slots);
-        return (store.Add(r), r);
+        var r = new Node(NewGuid(), rect, label, kind, header, slots);
+        store.Add(r);
+        return r;
     }
 
-    public static (IObjectStore, Graph) CreateGraph(IObjectStore? store = null)
+    public static Graph CreateGraph(IObjectStore store)
     {
-        store ??= new ObjectStore();
-        (store, var nodes) = CreateNodes(store, Text);
-        return (store, new Graph(nodes.ToList(), Array.Empty<Connection>()));
+        var nodes = CreateNodes(store, Text);
+        var r = new Graph(NewGuid(), nodes, Array.Empty<Connection>());
+        store.Add(r);
+        return r;
+
     }
 }
