@@ -1,15 +1,82 @@
-﻿namespace Emu;
+﻿using System;
+using System.Windows;
+using System.Windows.Media;
+using Peacock;
 
-public static class Behaviors
-{ }
-/*
- public record DragState(bool IsDragging = false, Point ControlStart = new(), Point MouseDragStart = new());
+namespace Emu;
+
+public record DragState(bool IsDragging = false, Point ControlStart = new(), Point MouseDragStart = new());
 
 public record ConnectingState(bool IsDragging = false, SocketView? Source = null, Point Current = new(), bool StartingFromSource = true)
 {
-    public Point SourcePoint => Source?.Point ?? new();
+    public Point SourcePoint => Source?.Socket.Rect.Center() ?? new();
     public Point StartPoint => StartingFromSource ? SourcePoint : Current;
     public Point EndPoint => StartingFromSource ? Current : SourcePoint;
+}
+
+public record DraggingBehavior : Behavior
+{
+    public DragState State { get; init; } = new();
+
+    public override IBehavior ProcessInput(IControl control, InputEvent input, IDispatcher dispatcher)
+    {
+        var nodeViewControl = (Control<NodeView>)control;
+        if (State.IsDragging)
+        {
+            switch (input)
+            {
+                case MouseUpEvent:
+                    return this with { State = State with { IsDragging = false } };
+
+                case MouseMoveEvent mme:
+                {
+                    var offset = mme.MouseStatus.Location.Subtract(State.MouseDragStart);
+                    var newLocation = State.ControlStart.Add(offset);
+
+                    dispatcher.UpdateView(control, view =>
+                    {
+                        if (view is NodeView nodeView)
+                        {
+                            return nodeView with
+                            {
+                                Node = nodeView.Node with
+                                {
+                                    Rect = new(newLocation, nodeView.Node.Rect.Size)
+                                }
+                            };
+                        }
+
+                        return view;
+                    });
+
+                    break;
+                }
+            }
+        }
+        else
+        {
+            if (input is MouseDownEvent md)
+            {
+                var location = input.MouseStatus.Location;
+
+                // TODO: will need to check that we aren't hitting a socket.
+                if (nodeViewControl.View.Node.Rect.Contains(location))
+                {
+                    return this with
+                    {
+                        State = State with
+                        {
+                            IsDragging = true,
+                            ControlStart = nodeViewControl.View.Node.Rect.TopLeft,
+                            MouseDragStart = input.MouseStatus.Location
+                        }
+                    };
+                }
+            }
+        }
+
+        return this;
+    }
 }
 
 public static class Behaviors
@@ -20,15 +87,13 @@ public static class Behaviors
     public static double DistanceSqr(Point a, Point b)
         => Sqr(a.X - b.X) + Sqr(a.Y - b.Y);
 
-    public static double MinDistSqr()
-        => (Dimensions.SocketRadius.X) * (Dimensions.SocketRadius.Y + 1);
-
     public static bool CloseEnough(SocketView s, Point p)
-        => DistanceSqr(s.Point, p) < MinDistSqr();
+        => DistanceSqr(s.Socket.Rect.Center(), p) < 5;
 
     public static bool CanConnect(SocketView view, ConnectingState state)
         => state.Source != null && CloseEnough(view, state.Current) && Semantics.CanConnect(state.Source.Socket, view.Socket);
 
+    /*
     public static SocketView? HitSocket(GraphView graphView, ConnectingState state)
         => graphView.GetSocketViews().FirstOrDefault(socket => CanConnect(socket, state));
 
@@ -86,50 +151,5 @@ public static class Behaviors
             });
         return control.AddBehavior(behavior);
     }
-
-    public static Control<NodeView> AddDraggingBehavior(this Control<NodeView> control)
-    {
-        var behavior = new Behavior<DragState>(0, new(), null, (control, updates, input, state) =>
-        {
-            var nodeViewControl = (Control<NodeView>)control;
-            if (state.IsDragging)
-            {
-                if (input is MouseUpEvent mue)
-                {
-                    state = state with { IsDragging = false };
-                }
-                else if (input is MouseMoveEvent mme)
-                {
-                    var offset = mme.MouseStatus.Location.Subtract(state.MouseDragStart);
-                    var newLocation = state.ControlStart.Add(offset);
-
-                    updates.AddUpdate((Control<NodeView>)control,
-                        view => view.WithRect(view.Rect.MoveTo(newLocation)));
-                }
-            }
-            else
-            {
-                if (input is MouseDownEvent md)
-                {
-                    var location = input.MouseStatus.Location;
-
-                    if (nodeViewControl.View.Rect.Contains(location)
-                       && !nodeViewControl.View.GetSocketViews().Any(s => CloseEnough(s, location)))
-                    {
-                        state = state with
-                        {
-                            IsDragging = true,
-                            ControlStart = nodeViewControl.View.Rect.Location,
-                            MouseDragStart = input.MouseStatus.Location
-                        };
-                    }
-                }
-            }
-
-            return (updates, state);
-        });
-
-        return control.AddBehavior(behavior);
-    }
+    */
 }
-*/

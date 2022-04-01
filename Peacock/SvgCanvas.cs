@@ -71,7 +71,7 @@ public class SvgCanvas : ICanvas
 
     public Size MeasureText(StyledText text)
     {
-        // TODO: this will have to be JavaScript. 
+        // TODO: this will have to be JavaScript. Or we remove MeasureText
         return new(100, 20);
     }
 

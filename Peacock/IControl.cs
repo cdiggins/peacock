@@ -12,10 +12,13 @@ public interface IControl
 }
 
 /// <summary>
-/// Represents a collection of proposed changes to the store 
+/// Represents a collection of proposed changes to the UI or application state.
 /// </summary>
 [Mutable]
 public interface IDispatcher
 {
-    void UpdateView(Guid id, Func<IView, IView> updateFunc);
+    void AddBehavior(IView view, IBehavior behavior);
+    void UpdateBehavior(IBehavior key, Func<IBehavior, IBehavior?> updateFunc);
+    void UpdateView(IView key, Func<IView, IView?> updateFunc);
+    void UpdateModel(IModel key, Func<IModel, IModel?> updateFunc);
 }
