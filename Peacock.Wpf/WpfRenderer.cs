@@ -36,10 +36,8 @@ public record WpfRenderer : ICanvas
         return this;
     }
 
-    public ICanvas Draw(StyledText text)
-        => WithContext(context => context.DrawText(
-            GetFormattedText(text),
-            GetTextLocation(text)));
+    public ICanvas Draw(StyledText text) 
+        => WithContext(context => context.DrawText( GetFormattedText(text), GetTextLocation(text)));
 
     public Point GetTextLocation(StyledText text)
         => text.Rect.GetAlignedLocation(MeasureText(text), text.Style.Alignment);
@@ -88,10 +86,13 @@ public record WpfRenderer : ICanvas
     public Typeface GetTypeface(TextStyle style)
         => GetOrCreate(Typefaces, style, style => new(style.FontFamily));
 
-    public FormattedText GetFormattedText(StyledText style)
-        => GetOrCreate(FormattedTexts, style, style => new(style.Text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, GetTypeface(style.Style), style.Style.FontSize,
-            GetBrush(style.Style.BrushStyle), new NumberSubstitution(), 1.0));
+    public FormattedText ToFormattedText(StyledText text)
+        => new(text.Text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, GetTypeface(text.Style),
+            text.Style.FontSize, GetBrush(text.Style.BrushStyle), new NumberSubstitution(), 1.0);
 
+    public FormattedText GetFormattedText(StyledText style)
+        => GetOrCreate(FormattedTexts, style, x => ToFormattedText(x));
+    
     // var dpiInfo = VisualTreeHelper.GetDpi(visual);
     // From <https://stackoverflow.com/questions/58343299/formattedtext-and-pixelsperdip-if-application-is-scaled-independently-of-dpi> 
     // TODO: handle DPI properly

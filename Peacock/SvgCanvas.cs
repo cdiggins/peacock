@@ -16,38 +16,51 @@ public class SvgCanvas : ICanvas
 
     public SvgCanvas(int width, int height)
     {
-        Text.AppendLine($"<svg width='{width}' height='{height}'>")
+        Text.AppendLine($"<svg width='{width}' height='{height}'>");
     }
 
     public ICanvas Draw(StyledText text)
     {
-        throw new NotImplementedException();
+        // TODO: compute the X and Y based on the alignment.
+        Text.AppendLine($"<text x='{text.Rect.Left}' y='{text.Rect.Top}' style='{SvgStyle(text.Style)}'>{text.Text}</text>");
+        return this;
     }
 
     public ICanvas Draw(StyledLine line)
     {
-        throw new NotImplementedException();
+        return this;
     }
 
     public ICanvas Draw(StyledEllipse ellipse)
     {
-
+        Text.AppendLine($"<ellipse {SvgEllipse(ellipse.Ellipse)} style='{SvgStyle(ellipse.Style)}' />");
+        return this;
     }
 
-    public string SvgColor(Color color)
-        => $"";
+    public static string SvgColor(Color color)
+        => $"rgb({color.R}, {color.G}, {color.B})";
 
-    public string SvgStyle(ShapeStyle style)
-    {
-        return "{fill: blue; stroke: pink; stroke - width:5; fill - opacity:0.1; stroke - opacity:0.9}";
-    }
+    public static string SvgStyle(ShapeStyle style)
+        => $"fill: {SvgColor(style.BrushStyle.Color)}; " +
+           $"stroke: {SvgColor(style.PenStyle.BrushStyle.Color)}; " +
+           $"stroke - width:{style.PenStyle.Width}; " +
+           $"fill - opacity:{style.BrushStyle.Color.A}; " +
+           $"stroke - opacity:{style.PenStyle.BrushStyle.Color.A}";
 
-    public string SvgRect(Rect rect)
+    public static string SvgStyle(TextStyle style)
+        => $"fill: {SvgColor(style.BrushStyle.Color)}; " +
+           $"font-family: {style.FontFamily}; " +
+           $"font-size: {style.FontSize}px; ";
+
+    public static string SvgEllipse(Ellipse ellipse)
+        => $"cx='{ellipse.Point.X}' cy='{ellipse.Point.Y}' rx='{ellipse.Radius.X}' ry='{ellipse.Radius.Y}'";
+
+    public static string SvgRect(Rect rect)
         => $"x='{rect.Left}' y='{rect.Top}' width='{rect.Width}' height='{rect.Height}'";
 
     public ICanvas Draw(StyledRect rect)
     {
-        Text.AppendLine($"<rect {SvgRect(rect.Rect.Rect)}/>");
+        Text.AppendLine($"<rect {SvgRect(rect.Rect.Rect)} style='{SvgStyle(rect.Style)}' />");
         return this;
     }
 
@@ -58,7 +71,8 @@ public class SvgCanvas : ICanvas
 
     public Size MeasureText(StyledText text)
     {
-        throw new NotImplementedException();
+        // TODO: this will have to be JavaScript. 
+        return new(100, 20);
     }
 
     public ICanvas SetRect(Rect rect)

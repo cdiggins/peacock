@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -22,14 +22,18 @@ public partial class GraphUserControl : UserControl
     public IObjectStore Store = new ObjectStore();
     public IControlFactory Factory = new ControlFactory();
     public IControl Control;
-    public WpfRenderer Renderer = new();
+    public WpfRenderer Canvas = new();
     public int WheelZoom = 0;
     public double ZoomFactor => Math.Pow(1.15, WheelZoom / 120.0);
     public Graph Graph;
+    public DrawingGroup CurrentFrame = new();
+    public DrawingGroup NextFrame = new ();
+
+    public Dictionary<IControl, DrawingGroup> Lookup = new();
 
     public DispatcherTimer Timer = new()
     {
-        Interval = TimeSpan.FromMilliseconds(25)
+        Interval = TimeSpan.FromMilliseconds(20)
     };
 
     public DateTimeOffset Started;
@@ -82,29 +86,71 @@ public partial class GraphUserControl : UserControl
         base.OnPreviewKeyDown(e);
     }
 
-    public static void Draw(ICanvas canvas, IControlFactory factory, IControl control)
+    public static IEnumerable<IControl> GetControls(IControlFactory factory, IControl parent)
+        => parent.GetChildren(factory).SelectMany(child => GetControls(factory, child)).Prepend(parent);
+
+    public void Draw(ICanvas canvas, IEnumerable<IControl> controls)
     {
-        control.Draw(canvas);
-        var children = control.GetChildren(factory);
-        foreach (var child in children)
-            Draw(canvas, factory, child);
+        //foreach (var control in controls) canvas = control.Draw(canvas);
+        if (canvas is WpfRenderer dc)
+        {
+            foreach (var control in controls)
+                dc.Context.DrawDrawing(Lookup[control]);
+        }
+    }
+
+    public DrawingGroup ToDrawingGroup(IControl control)
+    {
+        var dg = new DrawingGroup();
+        var context = dg.Open();
+        control.Draw(new WpfRenderer(context));
+        context.Close();
+        return dg;
     }
 
     protected override void OnRender(DrawingContext drawingContext)
+    {
+        //drawingContext.DrawDrawing(CurrentFrame);
+        Render(drawingContext);
+        base.OnRender(drawingContext);
+    }
+
+    public void Render(DrawingContext drawingContext)
     {
         var rect = new Rect(new(), RenderSize);
         drawingContext.PushClip(new RectangleGeometry(rect));
         drawingContext.DrawRectangle(new SolidColorBrush(Colors.SlateGray), new Pen(), rect);
         var scaleTransform = new ScaleTransform(ZoomFactor, ZoomFactor);
         drawingContext.PushTransform(scaleTransform);
-        Renderer.Context = drawingContext;
+        Canvas.Context = drawingContext;
+        Render(Canvas);
+        drawingContext.Pop();
+        drawingContext.Pop();
+    }
 
+    public void Render(ICanvas canvas)
+    {
         var rootControl = Factory.Create(null, Graph);
-        Draw(Renderer, Factory, rootControl);
+        List<IControl> controls = new List<IControl>();
+        var creatingProfiler = Util.TimeIt("Create controls", () => controls = GetControls(Factory, rootControl).ToList());
+        if (Lookup.Count == 0)
+        {
+            foreach (var c in controls)
+            {
+                Lookup.Add(c, ToDrawingGroup(c));
+            }
+        }
+        else
+        {
+            foreach (var c in controls)
+            {
+                Debug.Assert(Lookup.ContainsKey(c));
+            }
+        }
 
-        drawingContext.Pop();
-        drawingContext.Pop();
-        base.OnRender(drawingContext);
+        var drawingProfiler = Util.TimeIt("Drawing", () => Draw(Canvas, controls));
+        var averageCreationTime = creatingProfiler.AverageMsec();
+        var averageDrawingTime = drawingProfiler.AverageMsec();
     }
 
     public void ProcessInput<T>(T inputEvent)
@@ -126,8 +172,18 @@ public partial class GraphUserControl : UserControl
 
         var newView = _graphControl.View.ApplyUpdates(updates);
         _graphControl = _graphControl.UpdateView(newView);
-        */  
+        */
 
+        /*
+        if (inputEvent is ClockEvent)
+        {
+            NextFrame = new();
+            var context = NextFrame.Open();
+            Render(context);
+            context.Close();
+            CurrentFrame = NextFrame;
+        }
+        */
         InvalidateVisual();
     }
 }

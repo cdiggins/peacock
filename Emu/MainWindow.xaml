@@ -6,6 +6,11 @@
         xmlns:emu="clr-namespace:Emu"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <emu:GraphUserControl x:Name="GraphControl">
-    </emu:GraphUserControl>
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="To SVG" Click="MenuItem_OnClick"/>
+        </Menu>
+        <emu:GraphUserControl x:Name="GraphUserControl">
+        </emu:GraphUserControl>
+    </DockPanel>
 </Window>

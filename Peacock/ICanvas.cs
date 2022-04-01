@@ -74,8 +74,3 @@ public interface ICanvas
     ICanvas SetRect(Rect rect);
     ICanvas PopRect();
 }
-
-public class SvgCanvas : ICanvas
-{
-
-}
