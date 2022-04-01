@@ -247,12 +247,19 @@ Transform 2D
     public static IReadOnlyList<Node> CreateNodes(IObjectStore store, string s)
     {
         var nodes = new List<Node>();
-        var pos = new Point(20, 20);
+        const int rows = 3;
         foreach (var subString in s.Split("--").Where(x => !string.IsNullOrWhiteSpace(x)))
         {
-            // TODO: compute the Rect. 
+            var i = nodes.Count;
+            var pos = new Point(20 + i / rows * NodeWidth * 1.3, 20);
+
+            if (i % rows != 0)
+            {
+                var prevNode = nodes[i - 1];
+                pos = new(pos.X, prevNode.Rect.Bottom + 20);
+            }
+
             var node = CreateNode(store, pos, subString);
-            pos = pos.Add(new Size(NodeWidth * 1.3, 0));
             nodes.Add(node);
         }
 
