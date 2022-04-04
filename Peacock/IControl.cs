@@ -1,24 +1,14 @@
 ﻿namespace Peacock;
 
 /// <summary>
-/// An immutable UI control.
+/// An immutable UI control. A control generates child controls on demand, but does not maintain a list. 
 /// </summary>
 public interface IControl
 {
     IView View { get; }
+    Func<IUpdates, IControl, IUpdates> Callback { get; }
     ICanvas Draw(ICanvas canvas);
     IEnumerable<IControl> GetChildren(IControlFactory factory);
-    IView Process(IInputEvent input, IDispatcher dispatcher);
-}
-
-/// <summary>
-/// Represents a collection of proposed changes to the UI or application state.
-/// </summary>
-[Mutable]
-public interface IDispatcher
-{
-    void AddBehavior(IView view, IBehavior behavior);
-    void UpdateBehavior(IBehavior key, Func<IBehavior, IBehavior?> updateFunc);
-    void UpdateView(IView key, Func<IView, IView?> updateFunc);
-    void UpdateModel(IModel key, Func<IModel, IModel?> updateFunc);
+    IEnumerable<IBehavior> GetDefaultBehaviors();
+    IUpdates Process(IInputEvent input, IUpdates updates);
 }

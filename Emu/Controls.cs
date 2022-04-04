@@ -7,23 +7,23 @@ using Peacock;
 
 namespace Emu;
 
-public record GraphControl(GraphView View)
-    : Control<GraphView>(View)
+public record GraphControl(GraphView View, Func<IUpdates, IControl, IUpdates> Callback)
+    : Control<GraphView>(View, Callback)
 {
     public override IEnumerable<IControl> GetChildren(IControlFactory factory)
-        => View.Graph.Nodes.Select(node => factory.Create(this, node))
-            .Concat(View.Graph.Connections.Select(conn => factory.Create(this, conn)));
+        => View.Graph.Nodes.SelectMany(factory.Create)
+            .Concat(View.Graph.Connections.SelectMany(factory.Create));
 }
 
-public record SocketControl(SocketView View) 
-    : Control<SocketView>(View)
+public record SocketControl(SocketView View, Func<IUpdates, IControl, IUpdates> Callback) 
+    : Control<SocketView>(View, Callback)
 {
     public override ICanvas Draw(ICanvas canvas) 
         => canvas.Draw(View.StyledShape());
 }
 
-public record SlotControl(SlotView View) 
-    : Control<SlotView>(View)
+public record SlotControl(SlotView View, Func<IUpdates, IControl, IUpdates> Callback) 
+    : Control<SlotView>(View, Callback)
 {
     public override ICanvas Draw(ICanvas canvas) 
         => View.Slot.IsHeader 
@@ -38,15 +38,17 @@ public record SlotControl(SlotView View)
     public override IEnumerable<IControl> GetChildren(IControlFactory factory)
     {
         if (View.Slot.Left != null)
-            yield return factory.Create(this, View.Slot.Left);
+            foreach (var c in factory.Create(View.Slot.Left))
+                yield return c;
 
         if (View.Slot.Right != null)
-            yield return factory.Create(this, View.Slot.Right);
+            foreach (var c in factory.Create(View.Slot.Right))
+                yield return c;
     }
 }
 
-public record NodeControl(NodeView View) 
-    : Control<NodeView>(View)
+public record NodeControl(NodeView View, Func<IUpdates, IControl, IUpdates> Callback) 
+    : Control<NodeView>(View, Callback)
 {
     // TODO: more of this should be in the View 
     public StyledEllipse NodeShadow() => new(
@@ -58,12 +60,11 @@ public record NodeControl(NodeView View)
             .Draw(View.StyledShape());
 
     public override IEnumerable<IControl> GetChildren(IControlFactory factory)
-        => View.Node.Slots.Select(slot => factory.Create(this, slot))
-            .Prepend(factory.Create(this, View.Node.Header));
+        => factory.Create(View.Node.Header).Concat(View.Node.Slots.SelectMany(factory.Create));
 }
 
-public record ConnectionControl(ConnectionView View)
-    : Control<ConnectionView>(View)
+public record ConnectionControl(ConnectionView View, Func<IUpdates, IControl, IUpdates> Callback)
+    : Control<ConnectionView>(View, Callback)
 {
     public Geometry ConnectorGeometry()
         => ConnectorGeometry(View.Connection.Line.A, View.Connection.Line.B);

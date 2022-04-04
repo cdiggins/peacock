@@ -9,7 +9,6 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using Peacock;
 using Peacock.Wpf;
-using Dispatcher = Peacock.Dispatcher;
 
 namespace Emu;
 
@@ -19,15 +18,13 @@ namespace Emu;
 /// </summary>
 public partial class GraphUserControl : UserControl
 {
-    public IObjectStore Store = new ObjectStore();
-    public IControlFactory Factory = new ControlFactory();
-    public IControl Control;
-    public WpfRenderer Canvas = new();
-    public int WheelZoom = 0;
-    public double ZoomFactor => Math.Pow(1.15, WheelZoom / 120.0);
+    public ControlManager Manager;
+    public IControlFactory Factory;
     public Graph Graph;
-    public DrawingGroup CurrentFrame = new();
-    public DrawingGroup NextFrame = new ();
+
+    public WpfRenderer Canvas = new();
+    public int WheelZoom;
+    public double ZoomFactor => Math.Pow(1.15, WheelZoom / 120.0);
 
     public Dictionary<IControl, DrawingGroup> Lookup = new();
 
@@ -58,7 +55,10 @@ public partial class GraphUserControl : UserControl
         // This indicates I have an object store for the model. I suppose that makes sense. 
         // Like the ControlManager. 
         
-        Graph = TestData.CreateGraph(Store);
+        Graph = TestData.CreateGraph();
+        Factory = new ControlFactory();
+        Manager = new ControlManager(Factory);
+        Manager.UpdateControlTree(Graph);
 
         //(this.Parent as Window).PreviewKeyDown += (sender, args) => Console.WriteLine("Parent key press");
         PreviewKeyDown += (sender, args) => ProcessInput(new KeyDownEvent(args));
@@ -84,19 +84,6 @@ public partial class GraphUserControl : UserControl
     protected override void OnPreviewKeyDown(KeyEventArgs e)
     {
         base.OnPreviewKeyDown(e);
-    }
-
-    public static IEnumerable<IControl> GetControls(IControlFactory factory, IControl parent)
-        => parent.GetChildren(factory).SelectMany(child => GetControls(factory, child)).Prepend(parent);
-
-    public void Draw(ICanvas canvas, IEnumerable<IControl> controls)
-    {
-        //foreach (var control in controls) canvas = control.Draw(canvas);
-        if (canvas is WpfRenderer dc)
-        {
-            foreach (var control in controls)
-                dc.Context.DrawDrawing(Lookup[control]);
-        }
     }
 
     public DrawingGroup ToDrawingGroup(IControl control)
@@ -130,27 +117,7 @@ public partial class GraphUserControl : UserControl
 
     public void Render(ICanvas canvas)
     {
-        var rootControl = Factory.Create(null, Graph);
-        List<IControl> controls = new List<IControl>();
-        var creatingProfiler = Util.TimeIt("Create controls", () => controls = GetControls(Factory, rootControl).ToList());
-        if (Lookup.Count == 0)
-        {
-            foreach (var c in controls)
-            {
-                Lookup.Add(c, ToDrawingGroup(c));
-            }
-        }
-        else
-        {
-            foreach (var c in controls)
-            {
-                Debug.Assert(Lookup.ContainsKey(c));
-            }
-        }
-
-        var drawingProfiler = Util.TimeIt("Drawing", () => Draw(Canvas, controls));
-        var averageCreationTime = creatingProfiler.AverageMsec();
-        var averageDrawingTime = drawingProfiler.AverageMsec();
+        Manager.Draw(canvas);
     }
 
     public void ProcessInput<T>(T inputEvent)
@@ -161,29 +128,11 @@ public partial class GraphUserControl : UserControl
             WheelZoom += mwe.Args.Delta;
         }
 
-        var updates = new Dispatcher();
         inputEvent.MouseStatus = new MouseStatus(this);
 
-        /*
-        (var newGraphControl, updates) = _graphControl.ProcessInput(updates, inputEvent);
-        if (newGraphControl == _graphControl)
-            return;
-        _graphControl = newGraphControl;
-
-        var newView = _graphControl.View.ApplyUpdates(updates);
-        _graphControl = _graphControl.UpdateView(newView);
-        */
-
-        /*
-        if (inputEvent is ClockEvent)
-        {
-            NextFrame = new();
-            var context = NextFrame.Open();
-            Render(context);
-            context.Close();
-            CurrentFrame = NextFrame;
-        }
-        */
+        var updates = Manager.ProcessInput(inputEvent);
+        Graph = updates.ApplyToModel<Graph>(Graph);
+        Manager.UpdateControlTree(Graph);
         InvalidateVisual();
     }
 }

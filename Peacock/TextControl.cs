@@ -23,7 +23,7 @@ public record TextView(
 
 public record TextControl(TextView View) : Control<TextView>(View)
 {
-    public override IView Process(IInputEvent input, IDispatcher dispatcher) 
+    public override IView Process(IInputEvent input, IUpdates updates) 
         => input is KeyDownEvent keyDown ? View.AddText(keyDown.Args.Key.ToString()) : View;
 
     public override ICanvas Draw(ICanvas canvas)

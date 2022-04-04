@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Windows;
-using System.Windows.Media;
 using Peacock;
 
 namespace Emu;
@@ -18,7 +17,7 @@ public record DraggingBehavior : Behavior
 {
     public DragState State { get; init; } = new();
 
-    public override IBehavior ProcessInput(IControl control, InputEvent input, IDispatcher dispatcher)
+    public override IUpdates ProcessInput(IControl control, InputEvent input, IUpdates updates)
     {
         var nodeViewControl = (Control<NodeView>)control;
         if (State.IsDragging)
@@ -26,61 +25,57 @@ public record DraggingBehavior : Behavior
             switch (input)
             {
                 case MouseUpEvent:
-                    return this with { State = State with { IsDragging = false } };
+                    return updates.UpdateBehavior(this, 
+                        x => x with { State = State with { IsDragging = false } });
 
                 case MouseMoveEvent mme:
                 {
                     var offset = mme.MouseStatus.Location.Subtract(State.MouseDragStart);
                     var newLocation = State.ControlStart.Add(offset);
 
-                    dispatcher.UpdateView(control, view =>
-                    {
-                        if (view is NodeView nodeView)
-                        {
-                            return nodeView with
-                            {
-                                Node = nodeView.Node with
-                                {
-                                    Rect = new(newLocation, nodeView.Node.Rect.Size)
-                                }
-                            };
-                        }
-
-                        return view;
-                    });
-
-                    break;
+                    return updates.UpdateModel(nodeViewControl.View.Node,
+                        model => model with { Rect = model.Rect.MoveTo(newLocation) });
                 }
             }
         }
         else
         {
-            if (input is MouseDownEvent md)
+            if (input is MouseDownEvent)
             {
                 var location = input.MouseStatus.Location;
 
                 // TODO: will need to check that we aren't hitting a socket.
+
                 if (nodeViewControl.View.Node.Rect.Contains(location))
                 {
-                    return this with
-                    {
-                        State = State with
+                    return updates.UpdateBehavior(this,
+                        x => x with
                         {
-                            IsDragging = true,
-                            ControlStart = nodeViewControl.View.Node.Rect.TopLeft,
-                            MouseDragStart = input.MouseStatus.Location
-                        }
-                    };
+                            State = State with
+                            {
+                                IsDragging = true,
+                                ControlStart = nodeViewControl.View.Node.Rect.TopLeft,
+                                MouseDragStart = input.MouseStatus.Location
+                            }
+                        });
                 }
             }
         }
 
-        return this;
+        return updates;
     }
 }
 
 public static class Behaviors
 {
+    public static IUpdates UpdateModel<TModel>(this IUpdates updates, TModel model, Func<TModel, TModel> func)
+        where TModel : IModel
+        => updates.UpdateModel(model, m => func((TModel)m));
+
+    public static IUpdates UpdateBehavior<TBehavior>(this IUpdates updates, TBehavior behavior, Func<TBehavior, TBehavior> func)
+        where TBehavior : IBehavior
+        => updates.UpdateBehavior(behavior, b => func((TBehavior)b));
+
     public static double Sqr(double x)
         => x * x;
 

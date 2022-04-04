@@ -244,7 +244,7 @@ Transform 2D
 * Rotation : Angle *
 ";
 
-    public static IReadOnlyList<Node> CreateNodes(IObjectStore store, string s)
+    public static IReadOnlyList<Node> CreateNodes(string s)
     {
         var nodes = new List<Node>();
         const int rows = 3;
@@ -259,7 +259,7 @@ Transform 2D
                 pos = new(pos.X, prevNode.Rect.Bottom + 20);
             }
 
-            var node = CreateNode(store, pos, subString);
+            var node = CreateNode(pos, subString);
             nodes.Add(node);
         }
 
@@ -278,7 +278,8 @@ Transform 2D
     public static Rect GetSocketRect(Rect slotRect, bool leftOrRight) => GetSocketRect(leftOrRight ? slotRect.LeftCenter() : slotRect.RightCenter());
     public static Rect GetSocketRect(Point point) => new(point.X - SlotRadius, point.Y - SlotRadius, SlotRadius * 2, SlotRadius * 2);
     public static Rect GetSlotRect(Rect rect, int i) => new(rect.Left, rect.Top + NodeHeaderHeight + i * NodeSlotHeight, rect.Width, NodeSlotHeight);
-    public static Slot CreateSlot(IObjectStore store, Rect nodeRect, int index, string s, string nodeName, bool isHeader)
+    
+    public static Slot CreateSlot(Rect nodeRect, int index, string s, string nodeName, bool isHeader)
     {
         s = s.Trim();
 
@@ -300,17 +301,13 @@ Transform 2D
         var slotRect = GetSlotRect(nodeRect, index);
         var leftSocket = hasLeftSocket ? new Socket(NewGuid(), GetSocketRect(slotRect, true), type, true) : null;
         var rightSocket = hasRightSocket ? new Socket(NewGuid(), GetSocketRect(slotRect, false), type, false) : null;
-        store = leftSocket == null ? store : store.Add(leftSocket);
-        store = rightSocket == null ? store : store.Add(rightSocket);
-        var slot = new Slot(NewGuid(), slotRect, name, type, isHeader, leftSocket, rightSocket);
-        store.Add(slot);
-        return slot;
+        return new Slot(NewGuid(), slotRect, name, type, isHeader, leftSocket, rightSocket);
     }
 
-    public static Node CreateNode(IObjectStore store, Point pos, string s)
-        => CreateNode(store, pos, s.Trim().Split('\n', StringSplitOptions.RemoveEmptyEntries).ToList());
+    public static Node CreateNode(Point pos, string s)
+        => CreateNode(pos, s.Trim().Split('\n', StringSplitOptions.RemoveEmptyEntries).ToList());
 
-    public static Node CreateNode(IObjectStore store, Point pos, List<string> contents)
+    public static Node CreateNode(Point pos, List<string> contents)
     {
         var label = contents[0].Trim();
         const NodeKind kind = NodeKind.OperatorSet;
@@ -321,21 +318,13 @@ Transform 2D
         for (var i=0; i < contents.Count; ++i)
         {
             var c = contents[i];
-            var slot = CreateSlot(store, rect, i, c, label, false);
+            var slot = CreateSlot(rect, i, c, label, false);
             slots.Add(slot);
         }
 
-        var r = new Node(NewGuid(), rect, label, kind, header, slots);
-        store.Add(r);
-        return r;
+        return new Node(NewGuid(), rect, label, kind, header, slots);
     }
 
-    public static Graph CreateGraph(IObjectStore store)
-    {
-        var nodes = CreateNodes(store, Text);
-        var r = new Graph(NewGuid(), nodes, Array.Empty<Connection>());
-        store.Add(r);
-        return r;
-
-    }
+    public static Graph CreateGraph()
+        => new Graph(NewGuid(), CreateNodes(Text), Array.Empty<Connection>());
 }

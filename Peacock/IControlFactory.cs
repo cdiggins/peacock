@@ -17,5 +17,6 @@ public interface IModel : IObject
 /// </summary>
 public interface IControlFactory
 {
-    IControl Create(IControl? parent, IModel model);
+    IEnumerable<IControl> Create(IModel model);
+    IControl Update(IControl original, IModel model);
 }

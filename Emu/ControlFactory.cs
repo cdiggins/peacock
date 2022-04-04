@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Media;
 using Peacock;
 
@@ -50,27 +52,52 @@ public record ControlFactory : IControlFactory
     
     public GraphStyle GraphStyle { get; init; } = new(DefaultShapeStyle, DefaultTextStyle);
 
-    public IControl Create(IControl? parent, IModel model)
+    public IEnumerable<IControl> Create(IModel model)
+        => Enumerable.Repeat(CreateSingleControl(model), 1);
+
+    public IUpdates UpdateModel(IUpdates updates, IControl control)
+        => control switch
+        {
+            GraphControl gc 
+                => updates,
+
+            NodeControl nc
+                => updates,
+
+            SlotControl sc
+                => updates,
+
+            ConnectionControl cc
+                => updates,
+
+            SocketControl sc 
+                => updates,
+
+            _
+                => throw new NotImplementedException($"Unrecognized control {control}");
+        };
+
+    public IControl CreateSingleControl(IModel model)
         => model switch
         {
             Graph g 
-                => new GraphControl(new(g, GraphStyle)),
+                => new GraphControl(new(g, GraphStyle), UpdateModel),
             
             Node n  
-                => new NodeControl(new(n, NodeStyle)),
+                => new NodeControl(new(n, NodeStyle), UpdateModel),
             
             Slot s 
                 => s.IsHeader 
-                    ? new SlotControl(new(s, HeaderStyle))
-                    : new SlotControl(new(s, SlotStyle)),
+                    ? new SlotControl(new(s, HeaderStyle), UpdateModel)
+                    : new SlotControl(new(s, SlotStyle), UpdateModel),
             
             Connection c 
-                => new ConnectionControl(new(c, ConnectionStyle)),
+                => new ConnectionControl(new(c, ConnectionStyle), UpdateModel),
 
             Socket k 
-                => new SocketControl(new(k, SocketStyle)),
+                => new SocketControl(new(k, SocketStyle), UpdateModel),
 
             _ 
-                => throw new NotImplementedException("Unrecognized model")
+                => throw new NotImplementedException($"Unrecognized model {model}")
         };
 }
