@@ -16,14 +16,14 @@ public record GraphControl(Rect Rect, GraphView View, Func<IUpdates, IControl, I
 }
 
 public record SocketControl(SocketView View, Func<IUpdates, IControl, IControl, IUpdates> Callback) 
-    : Control<SocketView>(View, Callback)
+    : Control<SocketView>(Rect.Empty, View, Callback)
 {
     public override ICanvas Draw(ICanvas canvas) 
         => canvas.Draw(View.StyledShape());
 }
 
 public record SlotControl(SlotView View, Func<IUpdates, IControl, IControl, IUpdates> Callback) 
-    : Control<SlotView>(View.View, Callback)
+    : Control<SlotView>(Rect.Empty, View, Callback)
 {
     public override ICanvas Draw(ICanvas canvas) 
         => View.Slot.IsHeader 
@@ -67,7 +67,7 @@ public record NodeControl(NodeView View, Func<IUpdates, IControl, IControl, IUpd
 }
 
 public record ConnectionControl(ConnectionView View, Func<IUpdates, IControl, IControl, IUpdates> Callback)
-    : Control<ConnectionView>(View.Connection.Line, View, Callback)
+    : Control<ConnectionView>(Rect.Empty, View, Callback)
 {
     public Geometry ConnectorGeometry()
         => ConnectorGeometry(View.Connection.Line.A, View.Connection.Line.B);

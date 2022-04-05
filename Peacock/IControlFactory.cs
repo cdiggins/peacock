@@ -4,8 +4,9 @@
 /// A model interface identifies data types as being used for the model,
 /// as opposed to the view, or some other role. 
 /// </summary>
-public interface IModel : IObject
+public interface IModel 
 {
+    Guid Id { get; }
 }
 
 /// <summary>

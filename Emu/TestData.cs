@@ -277,7 +277,7 @@ Transform 2D
     public static Rect GetNodeHeaderRect(Rect nodeRect) => new(new Point(), new Size(nodeRect.Width, NodeHeaderHeight));
     public static Rect GetSocketRect(Rect slotRect, bool leftOrRight) => GetSocketRect(leftOrRight ? slotRect.LeftCenter() : slotRect.RightCenter());
     public static Rect GetSocketRect(Point point) => new(point.X - SlotRadius, point.Y - SlotRadius, SlotRadius * 2, SlotRadius * 2);
-    public static Rect GetSlotRect(Rect rect, int i) => new(rect.Left, rect.Top + NodeHeaderHeight + i * NodeSlotHeight, rect.Width, NodeSlotHeight);
+    public static Rect GetSlotRect(Rect rect, int i) => new(0, NodeHeaderHeight + i * NodeSlotHeight, rect.Width, NodeSlotHeight);
     
     public static Slot CreateSlot(Rect nodeRect, int index, string s, string nodeName, bool isHeader)
     {

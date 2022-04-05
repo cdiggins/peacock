@@ -41,14 +41,14 @@
 
         public ICanvas Draw(ICanvas canvas, Tree<IControl> node)
         {
-            node.Value.Draw(canvas);
-            canvas = canvas.SetRect(node.Value.Dimensions);
+            canvas = node.Value.Draw(canvas);    
+            if (!node.Value.Dimensions.Size.IsEmpty)
+                canvas = canvas.SetRect(node.Value.Dimensions);
             foreach (var child in node.Children)
-            {
-                canvas = Draw(canvas, node);
-            }
-
-            return canvas.PopRect();
+                canvas = Draw(canvas, child);
+            if (!node.Value.Dimensions.Size.IsEmpty)
+                canvas = canvas.PopRect();
+            return canvas;
         }
 
         public ICanvas Draw(ICanvas canvas) => 

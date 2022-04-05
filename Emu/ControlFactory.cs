@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 using System.Windows.Media;
 using Peacock;
 
@@ -87,13 +88,13 @@ public record ControlFactory : IControlFactory
         => model switch
         {
             Graph g 
-                => new GraphControl(new(g, GraphStyle), UpdateModel),
+                => new GraphControl(Rect.Empty, new(g, GraphStyle), UpdateModel),
             
             Node n  
                 => new NodeControl(new(n, NodeStyle), UpdateModel),
             
             Slot s 
-                => s.IsHeader 
+                => s.IsHeader   
                     ? new SlotControl(new(s, HeaderStyle), UpdateModel)
                     : new SlotControl(new(s, SlotStyle), UpdateModel),
             

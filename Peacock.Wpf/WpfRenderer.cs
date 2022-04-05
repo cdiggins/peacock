@@ -70,12 +70,11 @@ public record WpfRenderer : ICanvas
     public ICanvas SetRect(Rect rect)
     { 
         Context?.PushTransform(new TranslateTransform(rect.Left, rect.Top));
-        Context?.PushClip(new RectangleGeometry(new Rect(rect.Size)));
         return this;
     }
 
     public ICanvas PopRect()
-        => WithContext(context => { context.Pop(); context.Pop(); });
+        => WithContext(context => { context.Pop(); });
 
     public Brush GetBrush(BrushStyle style)
         => GetOrCreate(Brushes, style, style => new SolidColorBrush(style.Color) { Opacity = (double)style.Color.A / 255 });
