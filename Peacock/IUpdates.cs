@@ -20,29 +20,23 @@
 /// </summary>
 public interface IUpdates
 {
-    IUpdates AddBehavior(IControl control, IBehavior behavior);
     IUpdates UpdateBehavior(IBehavior key, Func<IBehavior, IBehavior> updateFunc);
     IUpdates UpdateControl(IControl key, Func<IControl, IControl> updateFunc);
     IUpdates UpdateModel(IModel key, Func<IModel, IModel> updateFunc);
 
-    IEnumerable<IControl> UpdatedControls();
-    IEnumerable<IBehavior> UpdatedBehaviors();
-    IEnumerable<IModel> UpdatedModels();
-    IEnumerable<IBehavior> NewBehaviors(IControl control);
-
-    IControl ApplyToControl(IControl control);
-    IBehavior ApplyToBehavior(IBehavior behavior);
-    IModel ApplyToModel(IModel model);
+    IBehavior Apply(IBehavior behavior);
+    IControl Apply(IControl control);
+    IModel Apply(IModel model);
 }
 
 public static class UpdatesExtensions
 {
     public static T ApplyToModel<T>(this IUpdates updates, T model) where T : IModel
-        => (T)updates.ApplyToModel(model);
+        => (T)updates.Apply(model);
 
     public static T ApplyToControl<T>(this IUpdates updates, T control) where T : IControl
-        => (T)updates.ApplyToControl(control);
+        => (T)updates.Apply(control);
 
     public static T ApplyToBehavior<T>(this IUpdates updates, T behavior) where T : IBehavior
-        => (T)updates.ApplyToBehavior(behavior);
+        => (T)updates.Apply(behavior);
 }

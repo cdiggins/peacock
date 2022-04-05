@@ -18,5 +18,4 @@ public interface IModel : IObject
 public interface IControlFactory
 {
     IEnumerable<IControl> Create(IModel model);
-    IControl Update(IControl original, IModel model);
 }

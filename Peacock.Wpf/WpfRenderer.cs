@@ -6,7 +6,7 @@ using System.Windows.Media;
 
 namespace Peacock.Wpf;
 
-// TODO: this is stateful, so make it a "Unique" type when converting to Plato.
+[Mutable]
 public record WpfRenderer : ICanvas         
 {
     public DrawingContext? Context { get; set; }
@@ -16,8 +16,8 @@ public record WpfRenderer : ICanvas
     public Dictionary<TextStyle, Typeface> Typefaces = new();
     public Dictionary<StyledText, FormattedText> FormattedTexts = new();
 
-    public WpfRenderer(DrawingContext? context = null)
-        => Context = context;
+    // TODO: figure out how to integrate this.
+    public Dictionary<IControl, DrawingGroup> DrawingGroup = new();
 
     public static TValue GetOrCreate<TKey, TValue>(Dictionary<TKey, TValue> dictionary, TKey key, Func<TKey, TValue> func)
         where TKey : notnull
@@ -100,4 +100,14 @@ public record WpfRenderer : ICanvas
 
     public ICanvas Draw(BrushStyle brushStyle, PenStyle penStyle, Geometry geometry)
         => WithContext(context => context.DrawGeometry(GetBrush(brushStyle), GetPen(penStyle), geometry));
+
+    // TODO: 
+    public DrawingGroup ToDrawingGroup(IControl control)
+    {
+        var dg = new DrawingGroup();
+        var context = dg.Open();
+        control.Draw(new WpfRenderer { Context = context });
+        context.Close();
+        return dg;
+    }
 }

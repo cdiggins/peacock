@@ -4,11 +4,11 @@
 /// A default implementation of IBehavior that does nothing, and is intended to be used
 /// as a base class for other behaviors. 
 /// </summary>
-public record Behavior : IBehavior
+public record Behavior(IControl Control) : IBehavior
 {
-    public virtual ICanvas Draw(IControl control, ICanvas canvas)
+    public virtual ICanvas Draw(ICanvas canvas)
         => canvas;
 
-    public virtual IUpdates ProcessInput(IControl control, InputEvent input, IUpdates updates)
+    public virtual IUpdates Process(InputEvent input, IUpdates updates)
         => updates;
 }

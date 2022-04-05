@@ -26,8 +26,6 @@ public partial class GraphUserControl : UserControl
     public int WheelZoom;
     public double ZoomFactor => Math.Pow(1.15, WheelZoom / 120.0);
 
-    public Dictionary<IControl, DrawingGroup> Lookup = new();
-
     public DispatcherTimer Timer = new()
     {
         Interval = TimeSpan.FromMilliseconds(20)
@@ -51,10 +49,6 @@ public partial class GraphUserControl : UserControl
         Focusable = true;
         Focus();
 
-        // TODO: I have to create a RefList of Nodes and Connections. 
-        // This indicates I have an object store for the model. I suppose that makes sense. 
-        // Like the ControlManager. 
-        
         Graph = TestData.CreateGraph();
         Factory = new ControlFactory();
         Manager = new ControlManager(Factory);
@@ -76,28 +70,8 @@ public partial class GraphUserControl : UserControl
         Started = DateTimeOffset.Now;
     }
 
-    protected override void OnKeyDown(KeyEventArgs e)
-    {
-        base.OnKeyDown(e);
-    }
-
-    protected override void OnPreviewKeyDown(KeyEventArgs e)
-    {
-        base.OnPreviewKeyDown(e);
-    }
-
-    public DrawingGroup ToDrawingGroup(IControl control)
-    {
-        var dg = new DrawingGroup();
-        var context = dg.Open();
-        control.Draw(new WpfRenderer(context));
-        context.Close();
-        return dg;
-    }
-
     protected override void OnRender(DrawingContext drawingContext)
     {
-        //drawingContext.DrawDrawing(CurrentFrame);
         Render(drawingContext);
         base.OnRender(drawingContext);
     }
@@ -131,7 +105,8 @@ public partial class GraphUserControl : UserControl
         inputEvent.MouseStatus = new MouseStatus(this);
 
         var updates = Manager.ProcessInput(inputEvent);
-        Graph = updates.ApplyToModel<Graph>(Graph);
+        Manager.ApplyChanges(updates);
+        Graph = updates.UpdateModel(Graph);
         Manager.UpdateControlTree(Graph);
         InvalidateVisual();
     }

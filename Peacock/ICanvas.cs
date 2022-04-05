@@ -34,7 +34,16 @@ public record PenStyle(BrushStyle BrushStyle, double Width)
 
 public record TextStyle(BrushStyle BrushStyle, string FontFamily, double FontSize, Alignment Alignment);
 public record ShapeStyle(BrushStyle BrushStyle, PenStyle PenStyle);
-public record Line(Point A, Point B);
+
+public record Line(Point A, Point B)
+{
+    public static implicit operator Rect(Line line)
+        => new(
+            Math.Min(line.A.X, line.B.X),
+            Math.Min(line.A.Y, line.B.Y),
+            Math.Max(line.A.X, line.B.X),
+            Math.Max(line.A.Y, line.B.Y));
+}
 
 public record Ellipse(Point Point, Radius Radius)
 {

@@ -13,13 +13,12 @@ public record ConnectingState(bool IsDragging = false, SocketView? Source = null
     public Point EndPoint => StartingFromSource ? Current : SourcePoint;
 }
 
-public record DraggingBehavior : Behavior
+public record DraggingBehavior(NodeControl NodeControl) : Behavior(NodeControl)
 {
     public DragState State { get; init; } = new();
 
-    public override IUpdates ProcessInput(IControl control, InputEvent input, IUpdates updates)
+    public override IUpdates Process(InputEvent input, IUpdates updates)
     {
-        var nodeViewControl = (Control<NodeView>)control;
         if (State.IsDragging)
         {
             switch (input)
@@ -33,7 +32,7 @@ public record DraggingBehavior : Behavior
                     var offset = mme.MouseStatus.Location.Subtract(State.MouseDragStart);
                     var newLocation = State.ControlStart.Add(offset);
 
-                    return updates.UpdateModel(nodeViewControl.View.Node,
+                    return updates.UpdateModel(NodeControl.View.Node,
                         model => model with { Rect = model.Rect.MoveTo(newLocation) });
                 }
             }
@@ -46,7 +45,7 @@ public record DraggingBehavior : Behavior
 
                 // TODO: will need to check that we aren't hitting a socket.
 
-                if (nodeViewControl.View.Node.Rect.Contains(location))
+                if (NodeControl.View.Node.Rect.Contains(location))
                 {
                     return updates.UpdateBehavior(this,
                         x => x with
@@ -54,7 +53,7 @@ public record DraggingBehavior : Behavior
                             State = State with
                             {
                                 IsDragging = true,
-                                ControlStart = nodeViewControl.View.Node.Rect.TopLeft,
+                                ControlStart = NodeControl.View.Node.Rect.TopLeft,
                                 MouseDragStart = input.MouseStatus.Location
                             }
                         });

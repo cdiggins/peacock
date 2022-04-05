@@ -55,14 +55,20 @@ public record ControlFactory : IControlFactory
     public IEnumerable<IControl> Create(IModel model)
         => Enumerable.Repeat(CreateSingleControl(model), 1);
 
-    public IUpdates UpdateModel(IUpdates updates, IControl control)
-        => control switch
+    public IUpdates UpdateModel(IUpdates updates, IControl oldControl, IControl newControl)
+        => newControl switch
         {
             GraphControl gc 
                 => updates,
 
             NodeControl nc
-                => updates,
+                // TODO: So this will probably work, but it seems a bit heavy-handed. 
+                // The current model is just obliterated with the one in the newControl. 
+                // There is no way to apply incremental updates. Each newControl just replaces  
+                // any other model change that another previously did. 
+                // What I really want is to compute the delta from the previous to the next,
+                // and that this function is responsible for applying the delta.
+                => updates.UpdateModel(nc.View.Node, model => nc.View.Node),
 
             SlotControl sc
                 => updates,
@@ -74,7 +80,7 @@ public record ControlFactory : IControlFactory
                 => updates,
 
             _
-                => throw new NotImplementedException($"Unrecognized control {control}");
+                => throw new NotImplementedException($"Unrecognized newControl {oldControl}")
         };
 
     public IControl CreateSingleControl(IModel model)

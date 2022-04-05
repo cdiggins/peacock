@@ -274,7 +274,7 @@ Transform 2D
     public static int SlotRadius = 5;
 
     public static double GetNodeHeight(int slots) => NodeHeaderHeight + slots * NodeSlotHeight;
-    public static Rect GetNodeHeaderRect(Rect nodeRect) => new(nodeRect.TopLeft, new Size(nodeRect.Width, NodeHeaderHeight));
+    public static Rect GetNodeHeaderRect(Rect nodeRect) => new(new Point(), new Size(nodeRect.Width, NodeHeaderHeight));
     public static Rect GetSocketRect(Rect slotRect, bool leftOrRight) => GetSocketRect(leftOrRight ? slotRect.LeftCenter() : slotRect.RightCenter());
     public static Rect GetSocketRect(Point point) => new(point.X - SlotRadius, point.Y - SlotRadius, SlotRadius * 2, SlotRadius * 2);
     public static Rect GetSlotRect(Rect rect, int i) => new(rect.Left, rect.Top + NodeHeaderHeight + i * NodeSlotHeight, rect.Width, NodeSlotHeight);
@@ -313,7 +313,7 @@ Transform 2D
         const NodeKind kind = NodeKind.OperatorSet;
 
         var rect = new Rect(pos, new Size(NodeWidth, GetNodeHeight(contents.Count)));
-        var header = new Slot(new Guid(), GetNodeHeaderRect(rect), label, label, true, null, null);
+        var header = new Slot(Guid.NewGuid(), GetNodeHeaderRect(rect), label, label, true, null, null);
         var slots = new List<Slot>();
         for (var i=0; i < contents.Count; ++i)
         {
@@ -326,5 +326,5 @@ Transform 2D
     }
 
     public static Graph CreateGraph()
-        => new Graph(NewGuid(), CreateNodes(Text), Array.Empty<Connection>());
+        => new(NewGuid(), CreateNodes(Text), Array.Empty<Connection>());
 }

@@ -12,12 +12,12 @@ public record ConnectionStyle(ShapeStyle ShapeStyle, TextStyle TextStyle);
 public record GraphStyle(ShapeStyle ShapeStyle, TextStyle TextStyle);
 
 // Views
-public record View(IModel? Model) : IView;
-public record NodeView(Node Node, NodeStyle Style) : View(Node);
-public record ConnectionView(Connection Connection, ConnectionStyle Style) : View(Connection);
-public record SlotView(Slot Slot, SlotStyle Style) : View(Slot);
-public record SocketView(Socket Socket, SocketStyle Style) : View(Socket);
-public record GraphView(Graph Graph, GraphStyle Style) : View(Graph);
+public record View(IModel? Model, object Id) : IView;
+public record NodeView(Node Node, NodeStyle Style) : View(Node, Node.Id);
+public record ConnectionView(Connection Connection, ConnectionStyle Style) : View(Connection, Connection.Id);
+public record SlotView(Slot Slot, SlotStyle Style) : View(Slot, Slot.Id);
+public record SocketView(Socket Socket, SocketStyle Style) : View(Socket, Socket.Id);
+public record GraphView(Graph Graph, GraphStyle Style) : View(Graph, Graph.Id);
 
 public static class StyleExtensions
 {

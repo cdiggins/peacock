@@ -7,23 +7,23 @@ using Peacock;
 
 namespace Emu;
 
-public record GraphControl(GraphView View, Func<IUpdates, IControl, IUpdates> Callback)
-    : Control<GraphView>(View, Callback)
+public record GraphControl(Rect Rect, GraphView View, Func<IUpdates, IControl, IControl, IUpdates> Callback)
+    : Control<GraphView>(Rect, View, Callback)
 {
     public override IEnumerable<IControl> GetChildren(IControlFactory factory)
         => View.Graph.Nodes.SelectMany(factory.Create)
             .Concat(View.Graph.Connections.SelectMany(factory.Create));
 }
 
-public record SocketControl(SocketView View, Func<IUpdates, IControl, IUpdates> Callback) 
+public record SocketControl(SocketView View, Func<IUpdates, IControl, IControl, IUpdates> Callback) 
     : Control<SocketView>(View, Callback)
 {
     public override ICanvas Draw(ICanvas canvas) 
         => canvas.Draw(View.StyledShape());
 }
 
-public record SlotControl(SlotView View, Func<IUpdates, IControl, IUpdates> Callback) 
-    : Control<SlotView>(View, Callback)
+public record SlotControl(SlotView View, Func<IUpdates, IControl, IControl, IUpdates> Callback) 
+    : Control<SlotView>(View.View, Callback)
 {
     public override ICanvas Draw(ICanvas canvas) 
         => View.Slot.IsHeader 
@@ -47,8 +47,8 @@ public record SlotControl(SlotView View, Func<IUpdates, IControl, IUpdates> Call
     }
 }
 
-public record NodeControl(NodeView View, Func<IUpdates, IControl, IUpdates> Callback) 
-    : Control<NodeView>(View, Callback)
+public record NodeControl(NodeView View, Func<IUpdates, IControl, IControl, IUpdates> Callback) 
+    : Control<NodeView>(View.Node.Rect, View, Callback)
 {
     // TODO: more of this should be in the View 
     public StyledEllipse NodeShadow() => new(
@@ -61,10 +61,13 @@ public record NodeControl(NodeView View, Func<IUpdates, IControl, IUpdates> Call
 
     public override IEnumerable<IControl> GetChildren(IControlFactory factory)
         => factory.Create(View.Node.Header).Concat(View.Node.Slots.SelectMany(factory.Create));
+
+    public override IEnumerable<IBehavior> GetDefaultBehaviors()
+        => new[] { new DraggingBehavior(this) };
 }
 
-public record ConnectionControl(ConnectionView View, Func<IUpdates, IControl, IUpdates> Callback)
-    : Control<ConnectionView>(View, Callback)
+public record ConnectionControl(ConnectionView View, Func<IUpdates, IControl, IControl, IUpdates> Callback)
+    : Control<ConnectionView>(View.Connection.Line, View, Callback)
 {
     public Geometry ConnectorGeometry()
         => ConnectorGeometry(View.Connection.Line.A, View.Connection.Line.B);

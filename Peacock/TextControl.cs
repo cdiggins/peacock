@@ -4,6 +4,7 @@ using System.Windows.Media;
 namespace Peacock;
 
 public record TextView(
+    object Id,
     Rect Rect,
     string Text = "", 
     bool HasFocus = false, 
@@ -12,8 +13,6 @@ public record TextView(
     int SelStart = 0, 
     int SelCount = 0) : IView
 {
-    public Guid Id { get; }
-
     public TextView AddText(string text) 
         => this with { Text = Text + text };
 }
@@ -21,10 +20,16 @@ public record TextView(
 // TODO: handle delete, cut, copy, paste, highlight, navigate 
 // TODO: draw the flashing caret ... at the correct moment in time. 
 
-public record TextControl(TextView View) : Control<TextView>(View)
+public record TextControl(TextView View, Func<IUpdates, IControl, IControl, IUpdates> Callback) 
+    : Control<TextView>(View.Rect, View, Callback)
 {
-    public override IView Process(IInputEvent input, IUpdates updates) 
-        => input is KeyDownEvent keyDown ? View.AddText(keyDown.Args.Key.ToString()) : View;
+    public override IUpdates Process(IInputEvent input, IUpdates updates) 
+        => input is KeyDownEvent keyDown 
+            ? updates.UpdateControl(this, (control) => ((TextControl)control).AddText(keyDown.Args.Key.ToString())) 
+            : updates;
+
+    public TextControl AddText(string text)
+        => this with { View = View.AddText(text) };
 
     public override ICanvas Draw(ICanvas canvas)
     {
