@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Windows;
+using System.Collections.Generic;
+using System.Linq;
 using Peacock;
 
 namespace Emu;
@@ -47,6 +49,7 @@ public record DraggingBehavior(NodeControl NodeControl) : Behavior(NodeControl)
 
                 if (NodeControl.View.Node.Rect.Contains(location))
                 {
+                    // TODO: can be simplified. Maube the base behavior has a state object 
                     return updates.UpdateBehavior(this,
                         x => x with
                         {
@@ -62,6 +65,70 @@ public record DraggingBehavior(NodeControl NodeControl) : Behavior(NodeControl)
         }
 
         return updates;
+    }
+}
+
+public record ConnectingBehavior(GraphControl GraphControl) : Behavior(GraphControl)
+{
+    public ConnectingState State { get; init; } = new();
+
+    public override IUpdates Process(InputEvent input, IUpdates updates)
+    {
+        if (!State.IsDragging && input is MouseDownEvent mde)
+        {
+            var mousePoint = mde.MouseStatus.Location;
+            var sockets = GraphControl.GetSockets();
+            var socket = sockets.FirstOrDefault(s => CloseEnough(s, mousePoint));
+            if (socket != null)
+            {
+                return updates.UpdateBehavior(this, x => x with { 
+                    State = State with { 
+                        IsDragging = true, 
+                        Source = socket, 
+                        Current = mousePoint, 
+                        StartingFromSource = !socket.Socket.LeftOrRight 
+                    } 
+                });
+            }
+        }
+        else if (State.IsDragging)
+        {
+            if (input is MouseMoveEvent mme)
+            {
+                // TODO: highlight any hovered slot / connector 
+                return updates.UpdateBehavior(this, x => x with
+                {
+                    State = State with
+                    {
+                        Current = mme.MouseStatus.Location
+                    }
+                });
+            }
+            else if (input is MouseUpEvent mue)
+            {
+                var endSocket = HitSocket(graphControl.View, state);
+                if (endSocket != null && State.Source != null)
+                {
+                    var sourceId = State.Source.Id;
+                    var destId = endSocket.Id;
+                    if (State.Source.Socket.LeftOrRight)
+                    {
+                        (sourceId, destId) = (destId, sourceId);
+                    }
+
+                    updates = updates.UpdateControl(GraphControl, 
+                        control,
+                        view => view.AddConnection(new(sourceId, destId)));
+                }
+
+                return updates.UpdateBehavior(this, b => b with { State = State with { IsDragging = false } });
+            }
+        }
+        return base.Process(input, updates);
+    }
+    public override ICanvas Draw(ICanvas canvas)
+    {
+        return base.Draw(canvas);
     }
 }
 
@@ -81,69 +148,16 @@ public static class Behaviors
     public static double DistanceSqr(Point a, Point b)
         => Sqr(a.X - b.X) + Sqr(a.Y - b.Y);
 
-    public static bool CloseEnough(SocketView s, Point p)
-        => DistanceSqr(s.Socket.Rect.Center(), p) < 5;
+    public static bool CloseEnough(SocketControl s, Point p)
+        => DistanceSqr(s.View.Socket.Rect.Center(), p) < 5;
 
-    public static bool CanConnect(SocketView view, ConnectingState state)
-        => state.Source != null && CloseEnough(view, state.Current) && Semantics.CanConnect(state.Source.Socket, view.Socket);
+    public static bool CanConnect(SocketControl socket, ConnectingState state)
+        => state.Source != null && CloseEnough(socket, state.Current) && Semantics.CanConnect(state.Source.Socket, socket.View.Socket);
 
-    /*
-    public static SocketView? HitSocket(GraphView graphView, ConnectingState state)
-        => graphView.GetSocketViews().FirstOrDefault(socket => CanConnect(socket, state));
+    public static IEnumerable<SocketControl> GetSockets(this GraphControl graph)
+        => throw new NotImplementedException();
 
-    public static Control<GraphView> AddConnectingBehavior(this Control<GraphView> control)
-    {
-        var behavior = new Behavior<ConnectingState>(
-            1,
-            new(),  
-            (control, canvas, state) =>            
-                 state.IsDragging && state.Source != null
-                    ? ViewDrawing.DrawConnection(canvas, state.StartPoint, state.EndPoint, Colors.BlueViolet)
-                    : canvas
-            ,
-            (control, updates, input, state) =>
-            {
-                var graphControl = (Control<GraphView>)control;
-                if (!state.IsDragging && input is MouseDownEvent mde)
-                {
-                    var mousePoint = mde.MouseStatus.Location;
-                    var sockets = graphControl.View.GetSocketViews();
-                    var socket = sockets.FirstOrDefault(s => CloseEnough(s, mousePoint));
-                    if (socket != null)
-                    {
-                        return (updates, state with { IsDragging = true, Source = socket, Current = mousePoint, StartingFromSource = !socket.Socket.LeftOrRight });
-                    }
-                }
-                else if (state.IsDragging)
-                {
-                    if (input is MouseMoveEvent mme)
-                    {
-                        // TODO: highlight any hovered slot / connector 
-                        return (updates, state with { Current = mme.MouseStatus.Location });
-                    }
-                    else if (input is MouseUpEvent mue)
-                    {
-                        var endSocket = HitSocket(graphControl.View, state);
-                        if (endSocket != null && state.Source != null)
-                        {
-                            var sourceId = state.Source.Id;
-                            var destId = endSocket.Id;
-                            if (state.Source.Socket.LeftOrRight)
-                            {
-                                (sourceId, destId) = (destId, sourceId);
-                            }
+    public static Socket? HitSocket(this GraphControl graph, ConnectingState state)
+        => graph.GetSockets().FirstOrDefault(socket => CanConnect(socket, state));
 
-                            updates = updates.AddUpdate(
-                                (Control<GraphView>)control,
-                                view => view.AddConnection(new(sourceId, destId)));
-                        }
-                        return (updates, state with { IsDragging = false });
-                    }
-                }
-                
-                return (updates, state);
-            });
-        return control.AddBehavior(behavior);
-    }
-    */
 }

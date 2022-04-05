@@ -9,7 +9,9 @@ public interface IComponentEvent
 // This identifies type that contain input event data
 // This could be generated from the Window system or from parent component 
 public interface IInputEvent
-{ }
+{
+    IControlTree ControlTree { get; }
+}
 
 // Keyboard, mouse, touch, file system, other 
 
@@ -21,9 +23,10 @@ public interface IMouseStatus
     bool MButtonDown { get; }
 }
 
-public record InputEvent : IInputEvent
+public record InputEvent(IMouseStatus MouseStatus, IControlTree ControlTree) : IInputEvent
 {
     public IMouseStatus MouseStatus { get; set; }
+    public IControlTree ControlTree { get; set; }
 }
 
 public record KeyDownEvent(KeyEventArgs Args) : InputEvent;

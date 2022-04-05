@@ -38,33 +38,6 @@ can transform its state object in response to input events, and can aggregate pr
 The `IUpdates` class aggregates a set of proposed changes to all views managed by a control. 
 These changes are managed as a list of functions associated with a particular view ID. 
 
-# FAQ
-
-## Why not just use WPF
-
-WPF is a pretty good library, but there are some areas for improvement:
-
-* It does not work well with immutable data structures:
-* Requires separate UI description language (XAML) from code logic 
-* Bindings and data-sources are complicate  
-* Hard to apply theming 
-* Tooling support has gotten worse over the years 
-* Layout is complicated 
-* Hard to learn 
-* Doesn't work well with other UI rendering frameworks.
-* Could be more efficient 
-* Easy to create resource leaks. 
-
-## Why not use F#
-
-F# is a great language, but I find [the syntax hostile to new users](https://docs.microsoft.com/en-us/dotnet/fsharp/language-reference/symbol-and-operator-reference/).
-
-## Why not MVU
-
-I don't think MVU is a viable architecture to large scale software development. 
-I am not coninved it can be used in an effective way to separate the different 
-software concerns: theming, styles, UI logic, animation, and domain models.  
-
 # A Platonic C# Library 
 
 Peacock is being written as a *Platonic* C# library. This means that it 

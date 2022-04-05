@@ -20,9 +20,8 @@
 
         public Dictionary<object, List<IBehavior>> Behaviors { get; } = new();
         public IControlFactory Factory { get; set; }
-        public List<Tree<IControl>> ControlTree { get; set; } = new();
-        public IEnumerable<IControl> AllControls => ControlTree.SelectMany(node => node.AllNodes()).Select(n => n.Value);
-
+        public IControlTree ControlTree { get; set; } 
+        public IEnumerable<IControl> AllControls => ControlTree.AllControls();
         public Tree<IControl> ToControlTree(IControl control)
             => new(control, x => x.GetChildren(Factory).Select(ToControlTree).ToList());
 

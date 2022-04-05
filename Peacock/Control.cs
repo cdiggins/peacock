@@ -13,4 +13,16 @@ public record Control<TView>(Rect Dimensions, TView View, Func<IUpdates, IContro
     public virtual IEnumerable<IControl> GetChildren(IControlFactory factory) => Enumerable.Empty<IControl>();
     public virtual IUpdates Process(IInputEvent input, IUpdates updates) => updates;
     public virtual IEnumerable<IBehavior> GetDefaultBehaviors() => Enumerable.Empty<IBehavior>();
+    public static IUpdates DefaultCallback(IUpdates updates, IControl oldControl, IControl newControl) => updates;
+}
+
+public class EmptyView : IView
+{
+    public object Id => Guid.NewGuid();
+
+    public static EmptyView Default = new();
+}
+
+public record EmptyControl() : Control<EmptyView>(Rect.Empty, EmptyView.Default, DefaultCallback)
+{
 }
