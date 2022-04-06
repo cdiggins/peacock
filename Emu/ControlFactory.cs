@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Windows;
 using System.Windows.Media;
 using Emu.Controls;
@@ -15,12 +16,6 @@ public record ControlFactory : IControlFactory
     public int NodeWidth { get; init; } = 110;
     public int SlotRadius { get; init; } = 5;
 
-    public double GetNodeHeight(int slots) => NodeHeaderHeight + slots * NodeSlotHeight;
-    public Rect GetNodeHeaderRect(Rect nodeRect) => new(new Point(), new Size(nodeRect.Width, NodeHeaderHeight));
-    public Rect GetSocketRect(Rect slotRect, bool leftOrRight) => GetSocketRect(leftOrRight ? slotRect.LeftCenter() : slotRect.RightCenter());
-    public Rect GetSocketRect(Point point) => new(point.X - SlotRadius, point.Y - SlotRadius, SlotRadius * 2, SlotRadius * 2);
-    public Rect GetSlotRect(Rect rect, int i) => new(0, NodeHeaderHeight + i * NodeSlotHeight, rect.Width, NodeSlotHeight);
-
     public static Color SocketPenColor(SocketView view)
         => view.Socket.Type switch
         {
@@ -28,7 +23,7 @@ public record ControlFactory : IControlFactory
             "Number" => Colors.Magenta,
             "Decimal" => Colors.Orange,
             "Array" => Colors.DodgerBlue,
-            "Center 2D" => Colors.Firebrick,
+            "AbsoluteCenter 2D" => Colors.Firebrick,
             "Size" => Colors.Firebrick,
             _ => Colors.DarkBlue,
         };
@@ -95,30 +90,55 @@ public record ControlFactory : IControlFactory
         };
 
     public GraphControl Create(Graph graph)
-        => new(Rect.Empty, new(graph, GraphStyle),
+        => new(new(graph, GraphStyle),
             graph.Nodes.Select(Create).ToList(),
             graph.Connections.Select(Create).ToList(),
             UpdateModel);
 
-    public Rect HeaderRect(Node node)
-        => new(node.Rect.TopLeft, new Size(node.Rect.Width, NodeHeaderHeight));
+    public Measures NodeMeasures(Node node)
+        => new(new Point(), node.Rect);
+
+    public double HeaderHeight(Node node)
+        => SlotHeight(node) * 1.5;
+
+    public double SlotHeight(Node node)
+        => node.Rect.Height / (node.Slots.Count + 1.5);
+
+    public Measures HeaderMeasures(Node node)
+        => NodeMeasures(node).Relative(new Size(node.Rect.Width, HeaderHeight(node)));
+
+    public Rect SlotRect(Node node, int i)
+        => new(new(0, HeaderHeight(node) + SlotHeight(node) * i),
+            new Size(node.Rect.Width, SlotHeight(node)));
+
+    public Measures SlotMeasures(Node node, int i)
+        => NodeMeasures(node).Relative(SlotRect(node, i));
+
+    public Rect SocketRect(Point point) 
+        => new(point.X - SlotRadius, point.Y - SlotRadius, SlotRadius * 2, SlotRadius * 2);
+    
+    public Measures SocketMeasures(Socket socket, Measures slotMeasures)
+        => socket.LeftOrRight
+            ? slotMeasures.Relative(SocketRect(slotMeasures.RelativeRect.LeftCenter())) 
+            : slotMeasures.Relative(SocketRect(slotMeasures.RelativeRect.RightCenter()));
 
     public NodeControl Create(Node node)
         => new(
-            new(node, NodeStyle), 
-            Create(node.Header, HeaderRect(node)), 
-            node.Slots.Select((slot, i) => Create(slot, GetSlotRect(node.Rect, i))).ToList(), 
+            NodeMeasures(node),
+            new(node, NodeStyle),
+            Create(node.Header, HeaderMeasures(node)),
+            node.Slots.Select((slot, i) => Create(slot, SlotMeasures(node, i))).ToList(), 
             UpdateModel);
 
-    public SlotControl Create(Slot slot, Rect rect)
+    public SlotControl Create(Slot slot, Measures slotMeasures)
         => slot.IsHeader
-            ? new (rect, new(slot, HeaderStyle), Create(slot.Left, rect), Create(slot.Right, rect), UpdateModel)
-            : new (rect, new(slot, SlotStyle), Create(slot.Left, rect), Create(slot.Right, rect), UpdateModel);
+            ? new (slotMeasures, new(slot, HeaderStyle), Create(slot.Left, slotMeasures), Create(slot.Right, slotMeasures), UpdateModel)
+            : new (slotMeasures, new(slot, SlotStyle), Create(slot.Left, slotMeasures), Create(slot.Right, slotMeasures), UpdateModel);
 
-    public SocketControl? Create(Socket? socket, Rect slotRect)
+    public SocketControl? Create(Socket? socket, Measures slotMeasures)
         => socket == null 
             ? null 
-            : new(GetSocketRect(slotRect, socket.LeftOrRight), new(socket, SocketStyle), UpdateModel);
+            : new(SocketMeasures(socket, slotMeasures), new(socket, SocketStyle), UpdateModel);
 
     public ConnectionControl Create(Connection conn)
         => new(new(conn, ConnectionStyle), UpdateModel);

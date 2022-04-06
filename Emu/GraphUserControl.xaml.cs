@@ -23,7 +23,7 @@ public partial class GraphUserControl : UserControl
     public IControlFactory Factory;
     public Graph Graph;
 
-    public WpfRenderer Canvas = new();
+    public WpfCanvas Canvas = new();
     public int WheelZoom;
     public double ZoomFactor => Math.Pow(1.15, WheelZoom / 120.0);
 

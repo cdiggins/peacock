@@ -19,8 +19,8 @@ public record TextView(
 // TODO: handle delete, cut, copy, paste, highlight, navigate 
 // TODO: draw the flashing caret ... at the correct moment in time. 
 
-public record TextControl(TextView View, Measurements Measurements, Func<IUpdates, IControl, IControl, IUpdates> Callback) 
-    : Control<TextView>(Measurements, View, Array.Empty<IControl>(), Callback)
+public record TextControl(TextView View, Measures Measures, Func<IUpdates, IControl, IControl, IUpdates> Callback) 
+    : Control<TextView>(Measures, View, Array.Empty<IControl>(), Callback)
 {
     public override IUpdates Process(IInputEvent input, IUpdates updates) 
         => input is KeyDownEvent keyDown 
@@ -42,14 +42,14 @@ public record TextControl(TextView View, Measurements Measurements, Func<IUpdate
                 new ShapeStyle(
                     new(Colors.Azure),
                     new(new(Colors.DarkGray), 0.5)),
-                new(Measurements.AbsoluteRect)))
+                new(Measures.AbsoluteRect)))
             .Draw(new StyledText(
                 new TextStyle(
                     new BrushStyle(Colors.Black),
                     "Segoe UI",
                     10,
                     Alignment.LeftCenter),
-                Measurements.AbsoluteRect,
+                Measures.AbsoluteRect,
                 View.Text));
     }
 }

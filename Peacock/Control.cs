@@ -6,14 +6,14 @@ namespace Peacock;
 /// This is a default implementation of IControl that can be used as-is, or also serve as a base class for other controls.
 /// </summary>
 public record Control<TView>(
-    Measurements Measurements,
+    Measures Measures,
     TView View, 
     IReadOnlyList<IControl> Children, 
     Func<IUpdates, IControl, IControl, IUpdates> Callback) : IControl 
     where TView : IView
 {
-    public Control(Measurements measurements, TView view, Func<IUpdates, IControl, IControl, IUpdates> Callback)
-        : this(measurements, view, Array.Empty<IControl>(), Callback) { }
+    public Control(Measures measures, TView view, Func<IUpdates, IControl, IControl, IUpdates> Callback)
+        : this(measures, view, Array.Empty<IControl>(), Callback) { }
 
     IView IControl.View => View;
     public virtual ICanvas Draw(ICanvas canvas) => canvas;
@@ -28,18 +28,8 @@ public record Control<TView>(
         => controlLists.SelectMany(c => c).ToList();
 
     public static IControl Default = new EmptyControl();
-}
 
-public class EmptyView : IView
-{
-    public object Id => Guid.NewGuid();
-    public static EmptyView Default = new();
-}
-
-public record EmptyControl() : Control<EmptyView>(
-    new Measurements(),
-    EmptyView.Default, 
-    Array.Empty<IControl>(), 
-    DefaultCallback)
-{
+    public Rect Relative => Measures.RelativeRect;
+    public Rect Absolute => Measures.AbsoluteRect;
+    public Size Size => Measures.Size;
 }

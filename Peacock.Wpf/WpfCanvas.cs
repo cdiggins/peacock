@@ -7,7 +7,7 @@ using System.Windows.Media;
 namespace Peacock.Wpf;
 
 [Mutable]
-public record WpfRenderer : ICanvas         
+public record WpfCanvas : ICanvas         
 {
     public DrawingContext? Context { get; set; }
 
@@ -105,7 +105,7 @@ public record WpfRenderer : ICanvas
     {
         var dg = new DrawingGroup();
         var context = dg.Open();
-        control.Draw(new WpfRenderer { Context = context });
+        control.Draw(new WpfCanvas { Context = context });
         context.Close();
         return dg;
     }

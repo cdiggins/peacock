@@ -8,8 +8,8 @@ public record SocketStyle(ShapeStyle ShapeStyle, TextStyle TextStyle, Radius Rad
 
 public record SocketView(Socket Socket, SocketStyle Style) : View(Socket, Socket.Id);
 
-public record SocketControl(Rect Rect, SocketView View, Func<IUpdates, IControl, IControl, IUpdates> Callback) 
-    : Control<SocketView>(Rect, View, Callback)
+public record SocketControl(Measures Measures, SocketView View, Func<IUpdates, IControl, IControl, IUpdates> Callback) 
+    : Control<SocketView>(Measures, View, Callback)
 {
     public override ICanvas Draw(ICanvas canvas) 
         => canvas.Draw(StyledShape());
@@ -18,8 +18,8 @@ public record SocketControl(Rect Rect, SocketView View, Func<IUpdates, IControl,
         => new(View.Style.ShapeStyle, Shape());
 
     public Ellipse Shape() 
-        => new(Measurements.RelativeRect.Center(), View.Style.Radius);
+        => new(Relative.Center(), View.Style.Radius);
 
-    public Point Center()
-        => Measurements.AbsoluteRect.Center();
+    public Point AbsoluteCenter()
+        => Absolute.Center();
 }

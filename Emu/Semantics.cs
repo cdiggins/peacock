@@ -6,8 +6,8 @@ public static class Semantics
 {
     public static List<(string, string)> TwoWayConverters = new()
     {
-        ("Center 2D", "Vector 2D"),
-        ("Center 2D", "Size 2D"),
+        ("AbsoluteCenter 2D", "Vector 2D"),
+        ("AbsoluteCenter 2D", "Size 2D"),
         ("Size 2D", "Vector 2D"),
         ("Line", "Interval"),
         ("Line", "Rect"),

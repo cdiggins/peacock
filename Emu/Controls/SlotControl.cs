@@ -8,8 +8,8 @@ public record SlotStyle(ShapeStyle ShapeStyle, TextStyle TextStyle, TextStyle Sm
 
 public record SlotView(Slot Slot, SlotStyle Style) : View(Slot, Slot.Id);
 
-public record SlotControl(Rect Rect, SlotView View, SocketControl? Left, SocketControl? Right, Func<IUpdates, IControl, IControl, IUpdates> Callback) 
-    : Control<SlotView>(Rect, View, ToChildren(Left, Right), Callback)
+public record SlotControl(Measures Measures, SlotView View, SocketControl? Left, SocketControl? Right, Func<IUpdates, IControl, IControl, IUpdates> Callback) 
+    : Control<SlotView>(Measures, View, ToChildren(Left, Right), Callback)
 {
     public override ICanvas Draw(ICanvas canvas) 
         => View.Slot.IsHeader 
@@ -22,13 +22,13 @@ public record SlotControl(Rect Rect, SlotView View, SocketControl? Left, SocketC
                 .Draw(StyledTypeText());
 
     public StyledText StyledText() 
-        => new(View.Style.TextStyle, Measurements.RelativeRect.ShrinkAndOffset(TextOffset()), View.Slot.Label);
+        => new(View.Style.TextStyle, Relative.ShrinkAndOffset(TextOffset()), View.Slot.Label);
     
     public StyledText StyledTypeText() 
-        => new(View.Style.SmallTextStyle, Measurements.RelativeRect.Shrink(TextOffset()), View.Slot.Type);
+        => new(View.Style.SmallTextStyle, Relative.Shrink(TextOffset()), View.Slot.Type);
     
     public RoundedRect Shape() 
-        => new(Measurements.RelativeRect, View.Style.Radius);
+        => new(Relative, View.Style.Radius);
 
     public StyledRect StyledShape()
         => new(View.Style.ShapeStyle, Shape());

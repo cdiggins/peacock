@@ -11,14 +11,14 @@ public class TestData
 {
     public static string Text =
             
-        @"Center 2D
+        @"AbsoluteCenter 2D
 * Value *
 * X : Number *
 * Y : Number *
   Values[] *
 --
 Mouse
-  Position : Center 2D *
+  Position : AbsoluteCenter 2D *
   Left : Boolean *
   Middle : Boolean *
   Right : Boolean * 
@@ -36,9 +36,9 @@ Pair
 --
 Line
 * Value *
-* A : Center 2D * 
-* B : Center 2D *
-  Middle : Center 2D *
+* A : AbsoluteCenter 2D * 
+* B : AbsoluteCenter 2D *
+  Middle : AbsoluteCenter 2D *
   Length : Number *   
 --
 Vector 2D
@@ -57,9 +57,9 @@ Size 2D
 --
 Rect
 * Value *
-* Position : Center 2D *
+* Position : AbsoluteCenter 2D *
 * Size : Size 2D *
-  Center : Center 2D *
+  AbsoluteCenter : AbsoluteCenter 2D *
 --
 Arithmetic
 * A : Any *
@@ -162,7 +162,7 @@ Clamp
 --
 Circle
 * Value *
-* Center : Center 2D *
+* AbsoluteCenter : AbsoluteCenter 2D *
 * Radius : Number * 
 --
 Chord

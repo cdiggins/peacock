@@ -10,7 +10,7 @@ public record ConnectionStyle(ShapeStyle ShapeStyle, TextStyle TextStyle);
 public record ConnectionView(Connection Connection, ConnectionStyle Style) : View(Connection, Connection.Id);
 
 public record ConnectionControl(ConnectionView View, Func<IUpdates, IControl, IControl, IUpdates> Callback)
-    : Control<ConnectionView>(Measurements.Default, View, Callback)
+    : Control<ConnectionView>(Measures.Default, View, Callback)
 {
     public Geometry ConnectorGeometry()
         => ConnectorGeometry(View.Connection.Line.A, View.Connection.Line.B);

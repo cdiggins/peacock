@@ -14,7 +14,7 @@ public record ConnectingState(bool IsDragging, SocketControl? Source, Point Curr
         : this(false, null, new(), true)
     { }
 
-    public Point SourcePoint => Source?.Center() ?? new();
+    public Point SourcePoint => Source?.AbsoluteCenter() ?? new();
     public Point StartPoint => StartingFromSource ? SourcePoint : Current;
     public Point EndPoint => StartingFromSource ? Current : SourcePoint;
 }
@@ -82,7 +82,7 @@ public static class ConnectingBehaviorExtensions
         => Sqr(a.X - b.X) + Sqr(a.Y - b.Y);
 
     public static bool CloseEnough(this SocketControl s, Point p)
-        => DistanceSqr(s.Center(), p) < 5;
+        => DistanceSqr(s.AbsoluteCenter(), p) < 5;
 
     public static bool CanConnect(this SocketControl socket, ConnectingState state)
         => state.Source != null && CloseEnough(socket, state.Current) && Semantics.CanConnect(state.Source.View.Socket, socket.View.Socket);
