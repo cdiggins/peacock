@@ -6,19 +6,13 @@ using Peacock;
 
 namespace Emu;
 
-public record DragState(bool IsDragging = false, Point ControlStart = new(), Point MouseDragStart = new());
-
-public record ConnectingState(bool IsDragging = false, SocketControl? Source = null, Point Current = new(), bool StartingFromSource = true)
+public record DragState(bool IsDragging, Point ControlStart, Point MouseDragStart)
 {
-    public Point SourcePoint => Source?.View.Socket.Rect.Center() ?? new();
-    public Point StartPoint => StartingFromSource ? SourcePoint : Current;
-    public Point EndPoint => StartingFromSource ? Current : SourcePoint;
+    public DragState() : this(false, new(), new()) { }
 }
 
-public record DraggingBehavior(NodeControl NodeControl) : Behavior(NodeControl)
+public record DraggingBehavior(NodeControl NodeControl) : Behavior<DragState>(NodeControl)
 {
-    public DragState State { get; init; } = new();
-
     public override IUpdates Process(InputEvent input, IUpdates updates)
     {
         if (State.IsDragging)
@@ -26,8 +20,7 @@ public record DraggingBehavior(NodeControl NodeControl) : Behavior(NodeControl)
             switch (input)
             {
                 case MouseUpEvent:
-                    return updates.UpdateBehavior(this, 
-                        x => x with { State = State with { IsDragging = false } });
+                    return UpdateState(updates, x => x with { IsDragging = false });
 
                 case MouseMoveEvent mme:
                 {
@@ -49,17 +42,12 @@ public record DraggingBehavior(NodeControl NodeControl) : Behavior(NodeControl)
 
                 if (NodeControl.View.Node.Rect.Contains(location))
                 {
-                    // TODO: can be simplified. Maube the base behavior has a state object 
-                    return updates.UpdateBehavior(this,
-                        x => x with
-                        {
-                            State = State with
-                            {
-                                IsDragging = true,
-                                ControlStart = NodeControl.View.Node.Rect.TopLeft,
-                                MouseDragStart = input.MouseStatus.Location
-                            }
-                        });
+                    return UpdateState(updates, x => x with
+                    {
+                        IsDragging = true,
+                        ControlStart = NodeControl.View.Node.Rect.TopLeft,
+                        MouseDragStart = input.MouseStatus.Location
+                    });
                 }
             }
         }
@@ -68,10 +56,19 @@ public record DraggingBehavior(NodeControl NodeControl) : Behavior(NodeControl)
     }
 }
 
-public record ConnectingBehavior(GraphControl GraphControl) : Behavior(GraphControl)
+public record ConnectingState(bool IsDragging, SocketControl? Source, Point Current, bool StartingFromSource)
 {
-    public ConnectingState State { get; init; } = new();
+    public ConnectingState()
+        : this(false, null, new(), true)
+    { }
 
+    public Point SourcePoint => Source?.View.Socket.Rect.Center() ?? new();
+    public Point StartPoint => StartingFromSource ? SourcePoint : Current;
+    public Point EndPoint => StartingFromSource ? Current : SourcePoint;
+}
+
+public record ConnectingBehavior(GraphControl GraphControl) : Behavior<ConnectingState>(GraphControl)
+{
     public override IUpdates Process(InputEvent input, IUpdates updates)
     {
         if (!State.IsDragging && input is MouseDownEvent mde)
@@ -81,13 +78,11 @@ public record ConnectingBehavior(GraphControl GraphControl) : Behavior(GraphCont
             var socket = sockets.FirstOrDefault(s => s.CloseEnough(mousePoint));
             if (socket != null)
             {
-                return updates.UpdateBehavior(this, x => x with { 
-                    State = State with { 
-                        IsDragging = true, 
-                        Source = socket, 
-                        Current = mousePoint, 
-                        StartingFromSource = !socket.View.Socket.LeftOrRight 
-                    } 
+                return UpdateState(updates, x => x with { 
+                    IsDragging = true, 
+                    Source = socket, 
+                    Current = mousePoint, 
+                    StartingFromSource = !socket.View.Socket.LeftOrRight
                 });
             }
         }
@@ -95,16 +90,11 @@ public record ConnectingBehavior(GraphControl GraphControl) : Behavior(GraphCont
         {
             if (input is MouseMoveEvent mme)
             {
-                // TODO: highlight any hovered slot / connector 
-                return updates.UpdateBehavior(this, x => x with
-                {
-                    State = State with
-                    {
-                        Current = mme.MouseStatus.Location
-                    }
+                return UpdateState(updates, x => x with {
+                    Current = mme.MouseStatus.Location
                 });
             }
-            else if (input is MouseUpEvent mue)
+            if (input is MouseUpEvent mue)
             {               
                 var endSocket = GraphControl.HitSocket(State);
                 if (endSocket != null && State.Source != null)
@@ -120,11 +110,12 @@ public record ConnectingBehavior(GraphControl GraphControl) : Behavior(GraphCont
                         control => ((GraphControl)control).AddConnection(sourceId, destId));
                 }
 
-                return updates.UpdateBehavior(this, b => b with { State = State with { IsDragging = false } });
+                return UpdateState(updates, x => x with { IsDragging = false });
             }
         }
         return base.Process(input, updates);
     }
+
     public override ICanvas Draw(ICanvas canvas)
     {
         return base.Draw(canvas);
@@ -133,14 +124,6 @@ public record ConnectingBehavior(GraphControl GraphControl) : Behavior(GraphCont
 
 public static class Behaviors
 {
-    public static IUpdates UpdateModel<TModel>(this IUpdates updates, TModel model, Func<TModel, TModel> func)
-        where TModel : IModel
-        => updates.UpdateModel(model, m => func((TModel)m));
-
-    public static IUpdates UpdateBehavior<TBehavior>(this IUpdates updates, TBehavior behavior, Func<TBehavior, TBehavior> func)
-        where TBehavior : IBehavior
-        => updates.UpdateBehavior(behavior, b => func((TBehavior)b));
-
     public static double Sqr(double x)
         => x * x;
 

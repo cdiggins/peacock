@@ -39,4 +39,17 @@ public static class UpdatesExtensions
 
     public static T ApplyToBehavior<T>(this IUpdates updates, T behavior) where T : IBehavior
         => (T)updates.Apply(behavior);
+
+    public static IUpdates UpdateBehavior<TBehavior>(this IUpdates updates, TBehavior key, Func<TBehavior, TBehavior> updateFunc)
+        where TBehavior : IBehavior
+        => updates.UpdateBehavior(key, b => updateFunc((TBehavior)b));
+
+    public static IUpdates UpdateControl<TControl>(this IUpdates updates, TControl key, Func<TControl, TControl> updateFunc)
+        where TControl : IControl
+        => updates.UpdateControl(key, c => updateFunc((TControl)c));
+
+    public static IUpdates UpdateModel<TModel>(this IUpdates updates, TModel key, Func<TModel, TModel> updateFunc)
+        where TModel : IModel
+        => updates.UpdateModel(key, m => updateFunc((TModel)m));
+
 }
