@@ -1,18 +1,20 @@
-﻿using System;
+﻿using Peacock;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
-using Peacock;
 
 namespace Emu;
 
-public record GraphControl(Rect Rect, GraphView View, 
-    IReadOnlyList<NodeControl> Nodes, 
-    IReadOnlyList<ConnectionControl> Connections, 
+public record GraphControl(Rect Rect, GraphView View,
+    IReadOnlyList<NodeControl> Nodes,
+    IReadOnlyList<ConnectionControl> Connections,
     Func<IUpdates, IControl, IControl, IUpdates> Callback)
     : Control<GraphView>(Rect, View, ToChildren(Nodes, Connections), Callback)
 {
+    public override IEnumerable<IBehavior> GetDefaultBehaviors()
+        => new[] { new ConnectingBehavior(this) };
 }
 
 public record SocketControl(SocketView View, Func<IUpdates, IControl, IControl, IUpdates> Callback) 
