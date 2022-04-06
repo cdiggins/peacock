@@ -21,7 +21,7 @@ public record TextView(
 // TODO: draw the flashing caret ... at the correct moment in time. 
 
 public record TextControl(TextView View, Func<IUpdates, IControl, IControl, IUpdates> Callback) 
-    : Control<TextView>(View.Rect, View, Callback)
+    : Control<TextView>(View.Rect, View, Array.Empty<IControl>(), Callback)
 {
     public override IUpdates Process(IInputEvent input, IUpdates updates) 
         => input is KeyDownEvent keyDown 

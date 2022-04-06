@@ -32,6 +32,7 @@ public record ControlFactory : IControlFactory
         };
 
     public static TextStyle DefaultTextStyle = new(Colors.Black, "Segoe UI", 12, new(AlignmentX.Left, AlignmentY.Center));
+
     public static ShapeStyle DefaultShapeStyle = new(Colors.DarkSeaGreen, new(Colors.DarkOrange, 0.5));
 
     public static TextStyle DefaultHeaderTextStyle => DefaultTextStyle with { FontSize = 14, Alignment = Alignment.CenterCenter };
@@ -84,27 +85,35 @@ public record ControlFactory : IControlFactory
                 => throw new NotImplementedException($"Unrecognized newControl {oldControl}")
         };
 
+    public GraphControl Create(Graph graph)
+        => new(Rect.Empty, new(graph, GraphStyle),
+            graph.Nodes.Select(Create).ToList(),
+            graph.Connections.Select(Create).ToList(),
+            UpdateModel);
+
+    public NodeControl Create(Node node)
+        => new(new(node, NodeStyle), Create(node.Header), node.Slots.Select(Create).ToList(), UpdateModel);
+
+
+    public SlotControl Create(Slot slot)
+        => slot.IsHeader
+            ? new (new(slot, HeaderStyle), Create(slot.Left), Create(slot.Right), UpdateModel)
+            : new (new(slot, SlotStyle), Create(slot.Left), Create(slot.Right), UpdateModel);
+
+    public SocketControl? Create(Socket? socket)
+        => socket == null ? null : new(new(socket, SocketStyle), UpdateModel);
+
+    public ConnectionControl Create(Connection conn)
+        => new(new(conn, ConnectionStyle), UpdateModel);
+
     public IControl CreateSingleControl(IModel model)
         => model switch
         {
-            Graph g 
-                => new GraphControl(Rect.Empty, new(g, GraphStyle), UpdateModel),
-            
-            Node n  
-                => new NodeControl(new(n, NodeStyle), UpdateModel),
-            
-            Slot s 
-                => s.IsHeader   
-                    ? new SlotControl(new(s, HeaderStyle), UpdateModel)
-                    : new SlotControl(new(s, SlotStyle), UpdateModel),
-            
-            Connection c 
-                => new ConnectionControl(new(c, ConnectionStyle), UpdateModel),
-
-            Socket k 
-                => new SocketControl(new(k, SocketStyle), UpdateModel),
-
-            _ 
-                => throw new NotImplementedException($"Unrecognized model {model}")
+            Graph g => Create(g),            
+            Node n => Create(n),            
+            Slot s => Create(s),            
+            Connection c => Create(c),
+            Socket k => Create(k) ?? EmptyControl.Default,
+            _ => throw new NotImplementedException($"Unrecognized model {model}")
         };
 }

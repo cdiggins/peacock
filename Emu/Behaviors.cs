@@ -8,9 +8,9 @@ namespace Emu;
 
 public record DragState(bool IsDragging = false, Point ControlStart = new(), Point MouseDragStart = new());
 
-public record ConnectingState(bool IsDragging = false, SocketView? Source = null, Point Current = new(), bool StartingFromSource = true)
+public record ConnectingState(bool IsDragging = false, SocketControl? Source = null, Point Current = new(), bool StartingFromSource = true)
 {
-    public Point SourcePoint => Source?.Socket.Rect.Center() ?? new();
+    public Point SourcePoint => Source?.View.Socket.Rect.Center() ?? new();
     public Point StartPoint => StartingFromSource ? SourcePoint : Current;
     public Point EndPoint => StartingFromSource ? Current : SourcePoint;
 }
@@ -78,7 +78,7 @@ public record ConnectingBehavior(GraphControl GraphControl) : Behavior(GraphCont
         {
             var mousePoint = mde.MouseStatus.Location;
             var sockets = GraphControl.GetSockets();
-            var socket = sockets.FirstOrDefault(s => CloseEnough(s, mousePoint));
+            var socket = sockets.FirstOrDefault(s => s.CloseEnough(mousePoint));
             if (socket != null)
             {
                 return updates.UpdateBehavior(this, x => x with { 
@@ -86,7 +86,7 @@ public record ConnectingBehavior(GraphControl GraphControl) : Behavior(GraphCont
                         IsDragging = true, 
                         Source = socket, 
                         Current = mousePoint, 
-                        StartingFromSource = !socket.Socket.LeftOrRight 
+                        StartingFromSource = !socket.View.Socket.LeftOrRight 
                     } 
                 });
             }
@@ -105,20 +105,19 @@ public record ConnectingBehavior(GraphControl GraphControl) : Behavior(GraphCont
                 });
             }
             else if (input is MouseUpEvent mue)
-            {
-                var endSocket = HitSocket(graphControl.View, state);
+            {               
+                var endSocket = GraphControl.HitSocket(State);
                 if (endSocket != null && State.Source != null)
                 {
-                    var sourceId = State.Source.Id;
-                    var destId = endSocket.Id;
-                    if (State.Source.Socket.LeftOrRight)
+                    var sourceId = State.Source.View.Socket.Id;
+                    var destId = endSocket.View.Socket.Id;
+                    if (State.Source.View.Socket.LeftOrRight)
                     {
                         (sourceId, destId) = (destId, sourceId);
                     }
 
                     updates = updates.UpdateControl(GraphControl, 
-                        control,
-                        view => view.AddConnection(new(sourceId, destId)));
+                        control => ((GraphControl)control).AddConnection(sourceId, destId));
                 }
 
                 return updates.UpdateBehavior(this, b => b with { State = State with { IsDragging = false } });
@@ -148,16 +147,19 @@ public static class Behaviors
     public static double DistanceSqr(Point a, Point b)
         => Sqr(a.X - b.X) + Sqr(a.Y - b.Y);
 
-    public static bool CloseEnough(SocketControl s, Point p)
+    public static bool CloseEnough(this SocketControl s, Point p)
         => DistanceSqr(s.View.Socket.Rect.Center(), p) < 5;
 
-    public static bool CanConnect(SocketControl socket, ConnectingState state)
-        => state.Source != null && CloseEnough(socket, state.Current) && Semantics.CanConnect(state.Source.Socket, socket.View.Socket);
+    public static bool CanConnect(this SocketControl socket, ConnectingState state)
+        => state.Source != null && CloseEnough(socket, state.Current) && Semantics.CanConnect(state.Source.View.Socket, socket.View.Socket);
 
     public static IEnumerable<SocketControl> GetSockets(this GraphControl graph)
-        => throw new NotImplementedException();
+        => graph.Descendants().OfType<SocketControl>();
 
-    public static Socket? HitSocket(this GraphControl graph, ConnectingState state)
+    public static SocketControl? HitSocket(this GraphControl graph, ConnectingState state)
         => graph.GetSockets().FirstOrDefault(socket => CanConnect(socket, state));
+
+    public static GraphControl AddConnection(this GraphControl control, Guid a, Guid b)
+        => throw new NotImplementedException();
 
 }

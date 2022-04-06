@@ -14,16 +14,15 @@
         public void UpdateControlTree(IModel model, IControlFactory? newFactory = null)
         {
             Factory = newFactory ?? Factory;
-            ControlTree = Factory.Create(model).Select(ToControlTree).ToList();
+            Controls = Factory.Create(model).ToList();
             UpdateBehaviors();
         }
 
         public Dictionary<object, List<IBehavior>> Behaviors { get; } = new();
         public IControlFactory Factory { get; set; }
-        public IControlTree ControlTree { get; set; } 
-        public IEnumerable<IControl> AllControls => ControlTree.AllControls();
-        public Tree<IControl> ToControlTree(IControl control)
-            => new(control, x => x.GetChildren(Factory).Select(ToControlTree).ToList());
+        public IReadOnlyList<IControl> Controls { get; set; }
+        public IEnumerable<IControl> AllControls
+            => Controls.SelectMany(c => c.Descendants());
 
         private void UpdateBehaviors()
         {
@@ -36,22 +35,22 @@
             foreach (var id in dict.Keys)
                 if (!Behaviors.ContainsKey(id))
                     Behaviors.Add(id, dict[id].GetDefaultBehaviors().ToList());
-        }
+        }        
 
-        public ICanvas Draw(ICanvas canvas, Tree<IControl> node)
+        public ICanvas Draw(ICanvas canvas)
+            => Controls.Aggregate(canvas, Draw);
+
+        public ICanvas Draw(ICanvas canvas, IControl control)
         {
-            canvas = node.Value.Draw(canvas);    
-            if (!node.Value.Dimensions.Size.IsEmpty)
-                canvas = canvas.SetRect(node.Value.Dimensions);
-            foreach (var child in node.Children)
+            canvas = control.Draw(canvas);    
+            if (!control.Dimensions.Size.IsEmpty)
+                canvas = canvas.SetRect(control.Dimensions);
+            foreach (var child in control.Children)
                 canvas = Draw(canvas, child);
-            if (!node.Value.Dimensions.Size.IsEmpty)
+            if (!control.Dimensions.Size.IsEmpty)
                 canvas = canvas.PopRect();
             return canvas;
         }
-
-        public ICanvas Draw(ICanvas canvas) => 
-            ControlTree.Aggregate(canvas, Draw);
 
         public IUpdates ProcessBehaviorInput(InputEvent input, IUpdates updates, IEnumerable<IBehavior> behaviors)
             => behaviors.Aggregate(updates, (current, behavior) => behavior.Process(input, current));
