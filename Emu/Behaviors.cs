@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Media;
 using Peacock;
 
 namespace Emu;
@@ -117,9 +118,8 @@ public record ConnectingBehavior(GraphControl GraphControl) : Behavior<Connectin
     }
 
     public override ICanvas Draw(ICanvas canvas)
-    {
-        return base.Draw(canvas);
-    }
+        => canvas.Draw(new(Colors.Transparent), new(Colors.Blue, 4),
+            ConnectionControl.ConnectorGeometry(State.SourcePoint, State.EndPoint));
 }
 
 public static class Behaviors
