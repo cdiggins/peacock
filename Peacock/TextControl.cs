@@ -5,7 +5,6 @@ namespace Peacock;
 
 public record TextView(
     object Id,
-    Rect Rect,
     string Text = "", 
     bool HasFocus = false, 
     int CaretPos = 0, 
@@ -20,8 +19,8 @@ public record TextView(
 // TODO: handle delete, cut, copy, paste, highlight, navigate 
 // TODO: draw the flashing caret ... at the correct moment in time. 
 
-public record TextControl(TextView View, Func<IUpdates, IControl, IControl, IUpdates> Callback) 
-    : Control<TextView>(View.Rect, View, Array.Empty<IControl>(), Callback)
+public record TextControl(TextView View, Measurements Measurements, Func<IUpdates, IControl, IControl, IUpdates> Callback) 
+    : Control<TextView>(Measurements, View, Array.Empty<IControl>(), Callback)
 {
     public override IUpdates Process(IInputEvent input, IUpdates updates) 
         => input is KeyDownEvent keyDown 
@@ -43,14 +42,14 @@ public record TextControl(TextView View, Func<IUpdates, IControl, IControl, IUpd
                 new ShapeStyle(
                     new(Colors.Azure),
                     new(new(Colors.DarkGray), 0.5)),
-                new(View.Rect)))
+                new(Measurements.AbsoluteRect)))
             .Draw(new StyledText(
                 new TextStyle(
                     new BrushStyle(Colors.Black),
                     "Segoe UI",
                     10,
                     Alignment.LeftCenter),
-                View.Rect,
+                Measurements.AbsoluteRect,
                 View.Text));
     }
 }

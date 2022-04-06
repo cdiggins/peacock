@@ -11,14 +11,14 @@ public class TestData
 {
     public static string Text =
             
-        @"Point 2D
+        @"Center 2D
 * Value *
 * X : Number *
 * Y : Number *
   Values[] *
 --
 Mouse
-  Position : Point 2D *
+  Position : Center 2D *
   Left : Boolean *
   Middle : Boolean *
   Right : Boolean * 
@@ -36,9 +36,9 @@ Pair
 --
 Line
 * Value *
-* A : Point 2D * 
-* B : Point 2D *
-  Middle : Point 2D *
+* A : Center 2D * 
+* B : Center 2D *
+  Middle : Center 2D *
   Length : Number *   
 --
 Vector 2D
@@ -57,9 +57,9 @@ Size 2D
 --
 Rect
 * Value *
-* Position : Point 2D *
+* Position : Center 2D *
 * Size : Size 2D *
-  Center : Point 2D *
+  Center : Center 2D *
 --
 Arithmetic
 * A : Any *
@@ -162,7 +162,7 @@ Clamp
 --
 Circle
 * Value *
-* Center : Point 2D *
+* Center : Center 2D *
 * Radius : Number * 
 --
 Chord
@@ -244,14 +244,20 @@ Transform 2D
 * Rotation : Angle *
 ";
 
+    public static int DefaultNodeWidth = 110;
+    public static int DefaultNodeHeight(int slots) => DefaultHeaderHeight + slots * DefaultSlotHeight;
+    public static int DefaultHeaderHeight = 25;
+    public static int DefaultSlotHeight = 20;
+
     public static IReadOnlyList<Node> CreateNodes(string s)
     {
+
         var nodes = new List<Node>();
         const int rows = 3;
         foreach (var subString in s.Split("--").Where(x => !string.IsNullOrWhiteSpace(x)))
         {
             var i = nodes.Count;
-            var pos = new Point(20 + i / rows * NodeWidth * 1.3, 20);
+            var pos = new Point(20 + i / rows * DefaultNodeWidth * 1.3, 20);
 
             if (i % rows != 0)
             {
@@ -268,18 +274,7 @@ Transform 2D
 
     public static Guid NewGuid() => Guid.NewGuid();
 
-    public static int NodeHeaderHeight = 25;
-    public static int NodeSlotHeight = 20;
-    public static int NodeWidth = 110;
-    public static int SlotRadius = 5;
-
-    public static double GetNodeHeight(int slots) => NodeHeaderHeight + slots * NodeSlotHeight;
-    public static Rect GetNodeHeaderRect(Rect nodeRect) => new(new Point(), new Size(nodeRect.Width, NodeHeaderHeight));
-    public static Rect GetSocketRect(Rect slotRect, bool leftOrRight) => GetSocketRect(leftOrRight ? slotRect.LeftCenter() : slotRect.RightCenter());
-    public static Rect GetSocketRect(Point point) => new(point.X - SlotRadius, point.Y - SlotRadius, SlotRadius * 2, SlotRadius * 2);
-    public static Rect GetSlotRect(Rect rect, int i) => new(0, NodeHeaderHeight + i * NodeSlotHeight, rect.Width, NodeSlotHeight);
-    
-    public static Slot CreateSlot(Rect nodeRect, int index, string s, string nodeName, bool isHeader)
+    public static Slot CreateSlot(string s, string nodeName, bool isHeader)
     {
         s = s.Trim();
 
@@ -298,10 +293,9 @@ Transform 2D
             type = s.Substring(n + 1).Trim();
         }
 
-        var slotRect = GetSlotRect(nodeRect, index);
-        var leftSocket = hasLeftSocket ? new Socket(NewGuid(), GetSocketRect(slotRect, true), type, true) : null;
-        var rightSocket = hasRightSocket ? new Socket(NewGuid(), GetSocketRect(slotRect, false), type, false) : null;
-        return new Slot(NewGuid(), slotRect, name, type, isHeader, leftSocket, rightSocket);
+        var leftSocket = hasLeftSocket ? new Socket(NewGuid(), type, true) : null;
+        var rightSocket = hasRightSocket ? new Socket(NewGuid(), type, false) : null;
+        return new Slot(NewGuid(), name, type, isHeader, leftSocket, rightSocket);
     }
 
     public static Node CreateNode(Point pos, string s)
@@ -312,16 +306,16 @@ Transform 2D
         var label = contents[0].Trim();
         const NodeKind kind = NodeKind.OperatorSet;
 
-        var rect = new Rect(pos, new Size(NodeWidth, GetNodeHeight(contents.Count)));
-        var header = new Slot(Guid.NewGuid(), GetNodeHeaderRect(rect), label, label, true, null, null);
+        var header = new Slot(Guid.NewGuid(), label, label, true, null, null);
         var slots = new List<Slot>();
         for (var i=0; i < contents.Count; ++i)
         {
             var c = contents[i];
-            var slot = CreateSlot(rect, i, c, label, false);
+            var slot = CreateSlot(c, label, false);
             slots.Add(slot);
         }
 
+        var rect = new Rect(pos, new Size(DefaultNodeWidth, DefaultNodeHeight(slots.Count)));
         return new Node(NewGuid(), rect, label, kind, header, slots);
     }
 

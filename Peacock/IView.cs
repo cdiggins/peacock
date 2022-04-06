@@ -1,4 +1,6 @@
-﻿namespace Peacock;
+﻿using System.Windows;
+
+namespace Peacock;
 
 /// <summary>
 /// Classes derived from view are used to contain the state of a control.

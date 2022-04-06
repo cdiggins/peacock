@@ -3,12 +3,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
+using Emu.Controls;
 using Peacock;
 
 namespace Emu;
 
 public record ControlFactory : IControlFactory
 {
+    public int NodeHeaderHeight { get; init; } = 25;
+    public int NodeSlotHeight { get; init; } = 20;
+    public int NodeWidth { get; init; } = 110;
+    public int SlotRadius { get; init; } = 5;
+
+    public double GetNodeHeight(int slots) => NodeHeaderHeight + slots * NodeSlotHeight;
+    public Rect GetNodeHeaderRect(Rect nodeRect) => new(new Point(), new Size(nodeRect.Width, NodeHeaderHeight));
+    public Rect GetSocketRect(Rect slotRect, bool leftOrRight) => GetSocketRect(leftOrRight ? slotRect.LeftCenter() : slotRect.RightCenter());
+    public Rect GetSocketRect(Point point) => new(point.X - SlotRadius, point.Y - SlotRadius, SlotRadius * 2, SlotRadius * 2);
+    public Rect GetSlotRect(Rect rect, int i) => new(0, NodeHeaderHeight + i * NodeSlotHeight, rect.Width, NodeSlotHeight);
+
     public static Color SocketPenColor(SocketView view)
         => view.Socket.Type switch
         {
@@ -16,7 +28,7 @@ public record ControlFactory : IControlFactory
             "Number" => Colors.Magenta,
             "Decimal" => Colors.Orange,
             "Array" => Colors.DodgerBlue,
-            "Point 2D" => Colors.Firebrick,
+            "Center 2D" => Colors.Firebrick,
             "Size" => Colors.Firebrick,
             _ => Colors.DarkBlue,
         };
@@ -54,9 +66,6 @@ public record ControlFactory : IControlFactory
     
     public GraphStyle GraphStyle { get; init; } = new(DefaultShapeStyle, DefaultTextStyle);
 
-    public IEnumerable<IControl> Create(IModel model)
-        => Enumerable.Repeat(CreateSingleControl(model), 1);
-
     public IUpdates UpdateModel(IUpdates updates, IControl oldControl, IControl newControl)
         => newControl switch
         {
@@ -91,29 +100,30 @@ public record ControlFactory : IControlFactory
             graph.Connections.Select(Create).ToList(),
             UpdateModel);
 
+    public Rect HeaderRect(Node node)
+        => new(node.Rect.TopLeft, new Size(node.Rect.Width, NodeHeaderHeight));
+
     public NodeControl Create(Node node)
-        => new(new(node, NodeStyle), Create(node.Header), node.Slots.Select(Create).ToList(), UpdateModel);
+        => new(
+            new(node, NodeStyle), 
+            Create(node.Header, HeaderRect(node)), 
+            node.Slots.Select((slot, i) => Create(slot, GetSlotRect(node.Rect, i))).ToList(), 
+            UpdateModel);
 
-
-    public SlotControl Create(Slot slot)
+    public SlotControl Create(Slot slot, Rect rect)
         => slot.IsHeader
-            ? new (new(slot, HeaderStyle), Create(slot.Left), Create(slot.Right), UpdateModel)
-            : new (new(slot, SlotStyle), Create(slot.Left), Create(slot.Right), UpdateModel);
+            ? new (rect, new(slot, HeaderStyle), Create(slot.Left, rect), Create(slot.Right, rect), UpdateModel)
+            : new (rect, new(slot, SlotStyle), Create(slot.Left, rect), Create(slot.Right, rect), UpdateModel);
 
-    public SocketControl? Create(Socket? socket)
-        => socket == null ? null : new(new(socket, SocketStyle), UpdateModel);
+    public SocketControl? Create(Socket? socket, Rect slotRect)
+        => socket == null 
+            ? null 
+            : new(GetSocketRect(slotRect, socket.LeftOrRight), new(socket, SocketStyle), UpdateModel);
 
     public ConnectionControl Create(Connection conn)
         => new(new(conn, ConnectionStyle), UpdateModel);
 
-    public IControl CreateSingleControl(IModel model)
-        => model switch
-        {
-            Graph g => Create(g),            
-            Node n => Create(n),            
-            Slot s => Create(s),            
-            Connection c => Create(c),
-            Socket k => Create(k) ?? EmptyControl.Default,
-            _ => throw new NotImplementedException($"Unrecognized model {model}")
-        };
+    public IEnumerable<IControl> Create(IModel model)
+        => new[] { Create((Graph)model) };
+
 }

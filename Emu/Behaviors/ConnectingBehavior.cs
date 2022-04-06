@@ -1,61 +1,12 @@
 ﻿using System;
-using System.Windows;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 using System.Windows.Media;
+using Emu.Controls;
 using Peacock;
 
-namespace Emu;
-
-public record DragState(bool IsDragging, Point ControlStart, Point MouseDragStart)
-{
-    public DragState() : this(false, new(), new()) { }
-}
-
-public record DraggingBehavior(NodeControl NodeControl) : Behavior<DragState>(NodeControl)
-{
-    public override IUpdates Process(InputEvent input, IUpdates updates)
-    {
-        if (State.IsDragging)
-        {
-            switch (input)
-            {
-                case MouseUpEvent:
-                    return UpdateState(updates, x => x with { IsDragging = false });
-
-                case MouseMoveEvent mme:
-                {
-                    var offset = mme.MouseStatus.Location.Subtract(State.MouseDragStart);
-                    var newLocation = State.ControlStart.Add(offset);
-
-                    return updates.UpdateModel(NodeControl.View.Node,
-                        model => model with { Rect = model.Rect.MoveTo(newLocation) });
-                }
-            }
-        }
-        else
-        {
-            if (input is MouseDownEvent)
-            {
-                var location = input.MouseStatus.Location;
-
-                // TODO: will need to check that we aren't hitting a socket.
-
-                if (NodeControl.View.Node.Rect.Contains(location))
-                {
-                    return UpdateState(updates, x => x with
-                    {
-                        IsDragging = true,
-                        ControlStart = NodeControl.View.Node.Rect.TopLeft,
-                        MouseDragStart = input.MouseStatus.Location
-                    });
-                }
-            }
-        }
-
-        return updates;
-    }
-}
+namespace Emu.Behaviors;
 
 public record ConnectingState(bool IsDragging, SocketControl? Source, Point Current, bool StartingFromSource)
 {
@@ -63,7 +14,7 @@ public record ConnectingState(bool IsDragging, SocketControl? Source, Point Curr
         : this(false, null, new(), true)
     { }
 
-    public Point SourcePoint => Source?.View.Socket.Rect.Center() ?? new();
+    public Point SourcePoint => Source?.Center() ?? new();
     public Point StartPoint => StartingFromSource ? SourcePoint : Current;
     public Point EndPoint => StartingFromSource ? Current : SourcePoint;
 }
@@ -122,7 +73,7 @@ public record ConnectingBehavior(GraphControl GraphControl) : Behavior<Connectin
             ConnectionControl.ConnectorGeometry(State.SourcePoint, State.EndPoint));
 }
 
-public static class Behaviors
+public static class ConnectingBehaviorExtensions
 {
     public static double Sqr(double x)
         => x * x;
@@ -131,7 +82,7 @@ public static class Behaviors
         => Sqr(a.X - b.X) + Sqr(a.Y - b.Y);
 
     public static bool CloseEnough(this SocketControl s, Point p)
-        => DistanceSqr(s.View.Socket.Rect.Center(), p) < 5;
+        => DistanceSqr(s.Center(), p) < 5;
 
     public static bool CanConnect(this SocketControl socket, ConnectingState state)
         => state.Source != null && CloseEnough(socket, state.Current) && Semantics.CanConnect(state.Source.View.Socket, socket.View.Socket);

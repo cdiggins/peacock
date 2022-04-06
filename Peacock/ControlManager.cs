@@ -43,12 +43,10 @@
         public ICanvas Draw(ICanvas canvas, IControl control)
         {
             canvas = control.Draw(canvas);    
-            if (!control.Dimensions.Size.IsEmpty)
-                canvas = canvas.SetRect(control.Dimensions);
+            canvas = canvas.SetRect(control.Measurements.RelativeRect);
             foreach (var child in control.Children)
                 canvas = Draw(canvas, child);
-            if (!control.Dimensions.Size.IsEmpty)
-                canvas = canvas.PopRect();
+            canvas = canvas.PopRect();
             return canvas;
         }
 
