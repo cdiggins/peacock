@@ -22,13 +22,13 @@ public record SlotControl(Measures Measures, SlotView View, SocketControl? Left,
                 .Draw(StyledTypeText());
 
     public StyledText StyledText() 
-        => new(View.Style.TextStyle, Relative.ShrinkAndOffset(TextOffset()), View.Slot.Label);
+        => new(View.Style.TextStyle, Client.ShrinkAndOffset(TextOffset()), View.Slot.Label);
     
     public StyledText StyledTypeText() 
-        => new(View.Style.SmallTextStyle, Relative.Shrink(TextOffset()), View.Slot.Type);
+        => new(View.Style.SmallTextStyle, Client.Shrink(TextOffset()), View.Slot.Type);
     
     public RoundedRect Shape() 
-        => new(Relative, View.Style.Radius);
+        => new(Client, View.Style.Radius);
 
     public StyledRect StyledShape()
         => new(View.Style.ShapeStyle, Shape());

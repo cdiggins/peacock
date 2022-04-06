@@ -18,7 +18,7 @@ public class TestData
   Values[] *
 --
 Mouse
-  Position : AbsoluteCenter 2D *
+  ParentPosition : AbsoluteCenter 2D *
   Left : Boolean *
   Middle : Boolean *
   Right : Boolean * 
@@ -57,7 +57,7 @@ Size 2D
 --
 Rect
 * Value *
-* Position : AbsoluteCenter 2D *
+* ParentPosition : AbsoluteCenter 2D *
 * Size : Size 2D *
   AbsoluteCenter : AbsoluteCenter 2D *
 --
@@ -244,10 +244,10 @@ Transform 2D
 * Rotation : Angle *
 ";
 
-    public static int DefaultNodeWidth = 110;
-    public static int DefaultNodeHeight(int slots) => DefaultHeaderHeight + slots * DefaultSlotHeight;
-    public static int DefaultHeaderHeight = 25;
-    public static int DefaultSlotHeight = 20;
+    public static double DefaultNodeWidth = 110;
+    public static double DefaultNodeHeight(int slots) => DefaultHeaderHeight + slots * DefaultSlotHeight;
+    public static double DefaultSlotHeight = 20;
+    public static double DefaultHeaderHeight = DefaultSlotHeight * 1.5;
 
     public static IReadOnlyList<Node> CreateNodes(string s)
     {

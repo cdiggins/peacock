@@ -31,5 +31,6 @@ public record Control<TView>(
 
     public Rect Relative => Measures.RelativeRect;
     public Rect Absolute => Measures.AbsoluteRect;
+    public Rect Client => Measures.ClientRect;
     public Size Size => Measures.Size;
 }

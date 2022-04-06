@@ -17,13 +17,13 @@ public record NodeControl(Measures Measures, NodeView View, SlotControl Header, 
 {
     public StyledEllipse NodeShadow() => new(
         new ShapeStyle(View.Style.ShadowColor, PenStyle.Empty),
-        new Ellipse(Relative.BottomCenter(), new Radius(Size.HalfWidth() * 1.3, Size.HalfWidth() * 0.3)));
+        new Ellipse(Client.BottomCenter(), new Radius(Size.HalfWidth() * 1.3, Size.HalfWidth() * 0.3)));
 
     public StyledRect StyledShape() 
         => new(View.Style.ShapeStyle, Shape());
 
     public RoundedRect Shape() 
-        => new(Relative, View.Style.Radius);
+        => new(Client, View.Style.Radius);
 
     public override ICanvas Draw(ICanvas canvas)
         => canvas.Draw(NodeShadow())

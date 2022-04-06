@@ -95,23 +95,23 @@ public record ControlFactory : IControlFactory
             graph.Connections.Select(Create).ToList(),
             UpdateModel);
 
-    public Measures NodeMeasures(Node node)
+    public static Measures NodeMeasures(Node node)
         => new(new Point(), node.Rect);
 
-    public double HeaderHeight(Node node)
+    public static double HeaderHeight(Node node)
         => SlotHeight(node) * 1.5;
 
-    public double SlotHeight(Node node)
-        => node.Rect.Height / (node.Slots.Count + 1.5);
+    public static double SlotHeight(Node node)
+        => node.Rect.Height / ((double)node.Slots.Count + 1.5);
 
-    public Measures HeaderMeasures(Node node)
+    public static Measures HeaderMeasures(Node node)
         => NodeMeasures(node).Relative(new Size(node.Rect.Width, HeaderHeight(node)));
 
-    public Rect SlotRect(Node node, int i)
+    public static Rect SlotRect(Node node, int i)
         => new(new(0, HeaderHeight(node) + SlotHeight(node) * i),
             new Size(node.Rect.Width, SlotHeight(node)));
 
-    public Measures SlotMeasures(Node node, int i)
+    public static Measures SlotMeasures(Node node, int i)
         => NodeMeasures(node).Relative(SlotRect(node, i));
 
     public Rect SocketRect(Point point) 
@@ -119,8 +119,8 @@ public record ControlFactory : IControlFactory
     
     public Measures SocketMeasures(Socket socket, Measures slotMeasures)
         => socket.LeftOrRight
-            ? slotMeasures.Relative(SocketRect(slotMeasures.RelativeRect.LeftCenter())) 
-            : slotMeasures.Relative(SocketRect(slotMeasures.RelativeRect.RightCenter()));
+            ? slotMeasures.Relative(SocketRect(new Rect(slotMeasures.Size).LeftCenter())) 
+            : slotMeasures.Relative(SocketRect(new Rect(slotMeasures.Size).RightCenter()));
 
     public NodeControl Create(Node node)
         => new(

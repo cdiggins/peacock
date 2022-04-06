@@ -11,6 +11,8 @@ public record WpfCanvas : ICanvas
 {
     public DrawingContext? Context { get; set; }
 
+    public List<Rect> PushedRects = new();
+
     public Dictionary<BrushStyle, Brush> Brushes = new();
     public Dictionary<PenStyle, Pen> Pens = new();
     public Dictionary<TextStyle, Typeface> Typefaces = new();
@@ -68,13 +70,18 @@ public record WpfCanvas : ICanvas
         => GetFormattedText(text).GetSize();
 
     public ICanvas SetRect(Rect rect)
-    { 
+    {
+        if (rect.IsEmpty) rect = new Rect(0, 0, 0, 0);
+        PushedRects.Add(rect);
         Context?.PushTransform(new TranslateTransform(rect.Left, rect.Top));
         return this;
     }
 
     public ICanvas PopRect()
-        => WithContext(context => { context.Pop(); });
+    {
+        PushedRects.RemoveAt(PushedRects.Count - 1);
+        return WithContext(context => { context.Pop(); });
+    }
 
     public Brush GetBrush(BrushStyle style)
         => GetOrCreate(Brushes, style, style => new SolidColorBrush(style.Color) { Opacity = (double)style.Color.A / 255 });

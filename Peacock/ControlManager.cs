@@ -42,8 +42,8 @@
 
         public ICanvas Draw(ICanvas canvas, IControl control)
         {
-            canvas = control.Draw(canvas);    
             canvas = canvas.SetRect(control.Measures.RelativeRect);
+            canvas = control.Draw(canvas);    
             foreach (var child in control.Children)
                 canvas = Draw(canvas, child);
             canvas = canvas.PopRect();

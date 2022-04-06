@@ -18,7 +18,7 @@ public record SocketControl(Measures Measures, SocketView View, Func<IUpdates, I
         => new(View.Style.ShapeStyle, Shape());
 
     public Ellipse Shape() 
-        => new(Relative.Center(), View.Style.Radius);
+        => new(Client.Center(), View.Style.Radius);
 
     public Point AbsoluteCenter()
         => Absolute.Center();
