@@ -4,7 +4,7 @@ using Peacock;
 
 namespace Emu.Controls;
 
-public record SocketStyle(ShapeStyle ShapeStyle, TextStyle TextStyle, Radius Radius);
+public record SocketStyle(ShapeStyle ShapeStyle, TextStyle TextStyle, Radius Radius, double ClickRadius);
 
 public record SocketView(Socket Socket, SocketStyle Style) : View(Socket, Socket.Id);
 

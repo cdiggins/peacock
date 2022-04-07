@@ -48,9 +48,12 @@ public record ConnectingBehavior(object? ControlId) : Behavior<ConnectingState>(
                 if (!input.MouseStatus.LButtonDown)
                     return UpdateState(updates, x => x with { IsDragging = false });
 
-                return UpdateState(updates, x => x with {
-                    Current = mme.MouseStatus.Location
-                });
+                var point = mme.MouseStatus.Location;
+                var hitSocket = graphControl.HitSocket(point);
+                if (hitSocket != null)
+                    point = hitSocket.AbsoluteCenter();
+
+                return UpdateState(updates, x => x with { Current = point });
             }
             if (input is MouseUpEvent mue)
             {
@@ -89,8 +92,10 @@ public static class ConnectingBehaviorExtensions
     public static double DistanceSqr(Point a, Point b)
         => Sqr(a.X - b.X) + Sqr(a.Y - b.Y);
 
+    public static double Distance(Point a, Point b)
+        => Math.Sqrt(DistanceSqr(a, b));
     public static bool CloseEnough(this SocketControl s, Point p)
-        => DistanceSqr(s.AbsoluteCenter(), p) < 5;
+        => Distance(s.AbsoluteCenter(), p) <= s.View.Style.ClickRadius;
 
     public static bool CanConnect(this SocketControl socket, ConnectingState state)
         => state.Source != null && CloseEnough(socket, state.Current) && Semantics.CanConnect(state.Source.View.Socket, socket.View.Socket);
