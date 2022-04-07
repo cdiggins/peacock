@@ -99,10 +99,10 @@ public record ControlFactory : IControlFactory
         => new(new Point(), node.Rect);
 
     public static double HeaderHeight(Node node)
-        => SlotHeight(node) * 1.5;
+        => SlotHeight(node);
 
     public static double SlotHeight(Node node)
-        => node.Rect.Height / ((double)node.Slots.Count + 1.5);
+        => node.Rect.Height / ((double)node.Slots.Count + 1);
 
     public static Measures HeaderMeasures(Node node)
         => NodeMeasures(node).Relative(new Size(node.Rect.Width, HeaderHeight(node)));
@@ -119,8 +119,8 @@ public record ControlFactory : IControlFactory
     
     public Measures SocketMeasures(Socket socket, Measures slotMeasures)
         => socket.LeftOrRight
-            ? slotMeasures.Relative(SocketRect(new Rect(slotMeasures.Size).LeftCenter())) 
-            : slotMeasures.Relative(SocketRect(new Rect(slotMeasures.Size).RightCenter()));
+            ? slotMeasures.Relative(SocketRect(slotMeasures.ClientRect.LeftCenter())) 
+            : slotMeasures.Relative(SocketRect(slotMeasures.ClientRect.RightCenter()));
 
     public NodeControl Create(Node node)
         => new(
@@ -131,9 +131,10 @@ public record ControlFactory : IControlFactory
             UpdateModel);
 
     public SlotControl Create(Slot slot, Measures slotMeasures)
-        => slot.IsHeader
-            ? new (slotMeasures, new(slot, HeaderStyle), Create(slot.Left, slotMeasures), Create(slot.Right, slotMeasures), UpdateModel)
-            : new (slotMeasures, new(slot, SlotStyle), Create(slot.Left, slotMeasures), Create(slot.Right, slotMeasures), UpdateModel);
+        => new(slotMeasures,
+            new(slot, slot.IsHeader ? HeaderStyle : SlotStyle),
+            Create(slot.Left, slotMeasures),
+            Create(slot.Right, slotMeasures), UpdateModel);
 
     public SocketControl? Create(Socket? socket, Measures slotMeasures)
         => socket == null 

@@ -41,7 +41,7 @@ public record Measures(Point ParentPosition, Vector Offset, Size Size)
         => new(AbsolutePosition, offset, size);
 
     public Measures Relative(Rect rect)
-        => Relative(new Vector(rect.Left, rect.Right), rect.Size);
+        => Relative(new Vector(rect.Left, rect.Top), rect.Size);
 
     public Measures Relative(Vector offset)
         => Relative(offset, Size);
