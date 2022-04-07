@@ -53,7 +53,7 @@ public record DraggingBehavior(object? ControlId)
                 if (nodeControl.Absolute.Contains(location))
                 {
                     var socket = nodeControl.HitSocket(location);
-                    if (socket != null)
+                    if (socket == null)
                         return StartDrag(updates, nodeControl.View.Node.Rect.TopLeft, input.MouseStatus.Location);
                 }
             }
