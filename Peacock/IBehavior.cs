@@ -17,8 +17,8 @@
 /// </summary>
 public interface IBehavior
 {
-    IControl Control { get; }
-    ICanvas Draw(ICanvas canvas);
-    IBehavior WithControl(IControl control);
-    IUpdates Process(InputEvent input, IUpdates updates);
+    object? ControlId { get; }
+    ICanvas PreDraw(ICanvas canvas, IControl control);
+    ICanvas PostDraw(ICanvas canvas, IControl control);
+    IUpdates Process(IControl control, InputEvent input, IUpdates updates);
 }

@@ -35,17 +35,6 @@
             foreach (var id in dict.Keys)
                 if (!Behaviors.ContainsKey(id))
                     Behaviors.Add(id, dict[id].GetDefaultBehaviors().ToList());
-
-            // Make sure each behavior is updates to use the latest control
-            foreach (var k in Behaviors.Keys)
-            {
-                if (dict.ContainsKey(k))
-                {
-                    var control = dict[k];
-                    var newBehaviors = Behaviors[k].Select(x => x.WithControl(control));
-                    Behaviors[k] = newBehaviors.ToList();
-                }
-            }
         }        
 
         public ICanvas Draw(ICanvas canvas)
@@ -54,21 +43,23 @@
         public ICanvas Draw(ICanvas canvas, IControl control)
         {
             canvas = canvas.SetRect(control.Measures.RelativeRect);
+            canvas = GetBehaviors(control).Aggregate(canvas, (localCanvas, b) => b.PreDraw(localCanvas, control));
             canvas = control.Draw(canvas);    
             foreach (var child in control.Children)
                 canvas = Draw(canvas, child);
+            canvas = GetBehaviors(control).Aggregate(canvas, (localCanvas, b) => b.PostDraw(localCanvas, control));
             canvas = canvas.PopRect();
             return canvas;
         }
 
-        public IUpdates ProcessBehaviorInput(InputEvent input, IUpdates updates, IEnumerable<IBehavior> behaviors)
-            => behaviors.Aggregate(updates, (current, behavior) => behavior.Process(input, current));
+        public IUpdates ProcessBehaviorInput(IControl control, InputEvent input, IUpdates updates, IEnumerable<IBehavior> behaviors)
+            => behaviors.Aggregate(updates, (current, behavior) => behavior.Process(control, input, current));
 
         public IEnumerable<IBehavior> GetBehaviors(IControl control)
             => Behaviors.ContainsKey(control.View.Id) ? Behaviors[control.View.Id] : Array.Empty<IBehavior>();
 
         public IUpdates ProcessControlInput(InputEvent input, IUpdates updates, IControl control)
-            => control.Process(input, ProcessBehaviorInput(input, updates, GetBehaviors(control)));
+            => control.Process(input, ProcessBehaviorInput(control, input, updates, GetBehaviors(control)));
 
         /// <summary>
         /// Process the input for all the controls, and their associated behaviors. Behaviors are given the chance to

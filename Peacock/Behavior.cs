@@ -4,16 +4,20 @@
 /// A default implementation of IBehavior that does nothing, and is intended to be used
 /// as a base class for other behaviors. 
 /// </summary>
-public record Behavior<TState>(IControl Control) 
+public record Behavior<TState>(object? ControlId) 
     : IBehavior
     where TState : new()
 {
-    public TState State { get; init; } = new();
+    public TState State { get; init; } 
+        = new();
 
-    public virtual ICanvas Draw(ICanvas canvas)
+    public virtual ICanvas PreDraw(ICanvas canvas, IControl control)
         => canvas;
 
-    public virtual IUpdates Process(InputEvent input, IUpdates updates)
+    public virtual ICanvas PostDraw(ICanvas canvas, IControl control)
+        => canvas;
+
+    public virtual IUpdates Process(IControl control, InputEvent input, IUpdates updates)
         => updates;
 
     public IUpdates UpdateState(IUpdates updates, Func<TState, TState> update)
@@ -21,7 +25,4 @@ public record Behavior<TState>(IControl Control)
 
     public Behavior<TState> WithState(TState state)
         => this with { State = state };
-
-    public IBehavior WithControl(IControl control)
-        => this with { Control = Control };
 }

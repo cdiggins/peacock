@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using System.Windows.Input;
 using Emu.Controls;
 using Peacock;
 
@@ -9,23 +10,36 @@ public record DragState(bool IsDragging, Point ControlStart, Point MouseDragStar
     public DragState() : this(false, new(), new()) { }
 }
 
-public record DraggingBehavior(NodeControl NodeControl) : Behavior<DragState>(NodeControl)
+public record DraggingBehavior(object? ControlId) 
+    : Behavior<DragState>(ControlId)
 {
-    public override IUpdates Process(InputEvent input, IUpdates updates)
+    public IUpdates CancelDrag(IUpdates updates)
+        => UpdateState(updates, x => x with { IsDragging = false });
+    
+    public IUpdates StartDrag(IUpdates updates, Point controlStart, Point dragStart)
+        => UpdateState(updates, x => x with { IsDragging = true, ControlStart = controlStart, MouseDragStart = dragStart });
+
+    public override IUpdates Process(IControl control, InputEvent input, IUpdates updates)
     {
+        if (control is not NodeControl nodeControl)
+            return base.Process(control, input, updates);
+
         if (State.IsDragging)
         {
             switch (input)
             {
                 case MouseUpEvent:
-                    return UpdateState(updates, x => x with { IsDragging = false });
+                    return CancelDrag(updates);
 
                 case MouseMoveEvent mme:
                 {
+                    if (!input.MouseStatus.LButtonDown)
+                        return CancelDrag(updates);
+
                     var offset = mme.MouseStatus.Location.Subtract(State.MouseDragStart);
                     var newLocation = State.ControlStart.Add(offset);
 
-                    return updates.UpdateModel(NodeControl.View.Node,
+                    return updates.UpdateModel(nodeControl.View.Node,
                         model => model with { Rect = model.Rect.MoveTo(newLocation) });
                 }
             }
@@ -36,16 +50,11 @@ public record DraggingBehavior(NodeControl NodeControl) : Behavior<DragState>(No
             {
                 var location = input.MouseStatus.Location;
 
-                // TODO: will need to check that we aren't hitting a socket.
-
-                if (NodeControl.Absolute.Contains(location))
+                if (nodeControl.Absolute.Contains(location))
                 {
-                    return UpdateState(updates, x => x with
-                    {
-                        IsDragging = true,
-                        ControlStart = NodeControl.View.Node.Rect.TopLeft,
-                        MouseDragStart = input.MouseStatus.Location
-                    });
+                    var socket = nodeControl.HitSocket(location);
+                    if (socket != null)
+                        return StartDrag(updates, nodeControl.View.Node.Rect.TopLeft, input.MouseStatus.Location);
                 }
             }
         }
