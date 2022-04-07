@@ -67,8 +67,8 @@ public record ConnectingBehavior(object? ControlId) : Behavior<ConnectingState>(
                         (sourceId, destId) = (destId, sourceId);
                     }
 
-                    updates = updates.UpdateControl(graphControl, 
-                        localControl => ((GraphControl)localControl).AddConnection(sourceId, destId));
+                    updates = updates.UpdateModel(graphControl.View.Graph, 
+                        graph => graph.AddConnection(sourceId, destId));
                 }
 
                 return UpdateState(updates, x => x with { IsDragging = false });
@@ -79,8 +79,7 @@ public record ConnectingBehavior(object? ControlId) : Behavior<ConnectingState>(
 
     public override ICanvas PostDraw(ICanvas canvas, IControl control)
         => State.IsDragging
-            ? canvas.Draw(new(Colors.Transparent), new(Colors.Blue, 4),
-                ConnectionControl.ConnectorGeometry(State.SourcePoint, State.EndPoint))
+            ? ((GraphControl)control).DrawConnector(canvas, State.SourcePoint, State.EndPoint)
             : base.PostDraw(canvas, control);
 }
 
@@ -111,8 +110,4 @@ public static class ConnectingBehaviorExtensions
 
     public static SocketControl? HitSocket(this IControl control, Point p)
         => control.GetSocket(s => s.CloseEnough(p));
-
-    public static GraphControl AddConnection(this GraphControl control, Guid a, Guid b)
-        => throw new NotImplementedException();
-
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using Peacock;
@@ -23,6 +24,12 @@ public record Slot(Guid Id, string Label, string Type, bool IsHeader, Socket? Le
 public record Socket(Guid Id, string Type, bool LeftOrRight) : Model(Id);
 
 // TODO: remove the Line 
-public record Connection(Guid Id, Line Line, Guid SourceId, Guid DestinationId) : Model(Id);
+public record Connection(Guid Id, Guid SourceId, Guid DestinationId) : Model(Id);
 
 public record Graph(Guid Id, IReadOnlyList<Node> Nodes, IReadOnlyList<Connection> Connections) : Model(Id);
+
+public static class ModelExtensions
+{
+    public static Graph AddConnection(this Graph graph, Guid a, Guid b)
+        => graph with { Connections = graph.Connections.Append(new Connection(Guid.NewGuid(), a, b)).ToList() };
+}

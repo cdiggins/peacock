@@ -56,8 +56,6 @@ public record ControlFactory : IControlFactory
     public SlotStyle SlotStyle { get; init; } = DefaultSlotStyle;
     public SlotStyle HeaderStyle { get; init; } = DefaultHeaderStyle;
     public NodeStyle NodeStyle { get; init; } = DefaultNodeStyle;
-
-    public ConnectionStyle ConnectionStyle { get; init; } = new(DefaultShapeStyle, DefaultTextStyle);
     
     public GraphStyle GraphStyle { get; init; } = new(DefaultShapeStyle, DefaultTextStyle);
 
@@ -79,9 +77,6 @@ public record ControlFactory : IControlFactory
             SlotControl sc
                 => updates,
 
-            ConnectionControl cc
-                => updates,
-
             SocketControl sc 
                 => updates,
 
@@ -92,7 +87,6 @@ public record ControlFactory : IControlFactory
     public GraphControl Create(Graph graph)
         => new(new(graph, GraphStyle),
             graph.Nodes.Select(Create).ToList(),
-            graph.Connections.Select(Create).ToList(),
             UpdateModel);
 
     public static Measures NodeMeasures(Node node)
@@ -140,9 +134,6 @@ public record ControlFactory : IControlFactory
         => socket == null 
             ? null 
             : new(SocketMeasures(socket, slotMeasures), new(socket, SocketStyle), UpdateModel);
-
-    public ConnectionControl Create(Connection conn)
-        => new(new(conn, ConnectionStyle), UpdateModel);
 
     public IEnumerable<IControl> Create(IModel model)
         => new[] { Create((Graph)model) };
