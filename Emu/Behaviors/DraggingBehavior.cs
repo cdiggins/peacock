@@ -38,7 +38,7 @@ public record DraggingBehavior(NodeControl NodeControl) : Behavior<DragState>(No
 
                 // TODO: will need to check that we aren't hitting a socket.
 
-                if (NodeControl.View.Node.Rect.Contains(location))
+                if (NodeControl.Absolute.Contains(location))
                 {
                     return UpdateState(updates, x => x with
                     {

@@ -19,5 +19,6 @@ public interface IBehavior
 {
     IControl Control { get; }
     ICanvas Draw(ICanvas canvas);
+    IBehavior WithControl(IControl control);
     IUpdates Process(InputEvent input, IUpdates updates);
 }

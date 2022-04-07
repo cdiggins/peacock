@@ -21,4 +21,7 @@ public record Behavior<TState>(IControl Control)
 
     public Behavior<TState> WithState(TState state)
         => this with { State = state };
+
+    public IBehavior WithControl(IControl control)
+        => this with { Control = Control };
 }

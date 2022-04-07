@@ -35,6 +35,17 @@
             foreach (var id in dict.Keys)
                 if (!Behaviors.ContainsKey(id))
                     Behaviors.Add(id, dict[id].GetDefaultBehaviors().ToList());
+
+            // Make sure each behavior is updates to use the latest control
+            foreach (var k in Behaviors.Keys)
+            {
+                if (dict.ContainsKey(k))
+                {
+                    var control = dict[k];
+                    var newBehaviors = Behaviors[k].Select(x => x.WithControl(control));
+                    Behaviors[k] = newBehaviors.ToList();
+                }
+            }
         }        
 
         public ICanvas Draw(ICanvas canvas)
