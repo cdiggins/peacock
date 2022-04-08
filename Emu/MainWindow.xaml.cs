@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using Peacock;
 
@@ -16,9 +17,12 @@ public partial class MainWindow : Window
 
     private void MenuItem_OnClick(object sender, RoutedEventArgs e)
     {
-        var canvas = new SvgCanvas(500, 500);
+        var canvas = new SvgCanvas(1600, 800);
         GraphUserControl.Render(canvas);
         var text = canvas.ToString();
-        File.WriteAllText(Path.Combine(Path.GetTempPath(), "temp.svg"), text);
+        var html = $"<html><body>{text}</body></html";
+        var filePath = Path.Combine(Path.GetTempPath(), "temp.html");
+        File.WriteAllText(filePath, html);
+        Process.Start(filePath);
     }
 }

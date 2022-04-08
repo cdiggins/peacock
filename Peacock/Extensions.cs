@@ -178,7 +178,7 @@ public static class Extensions
         => WhereNotNull<T>((IEnumerable<T?>)self);
     
     public static Size Subtract(this Size size, Size amount)
-        => new(size.Width - amount.Width, size.Height - amount.Height);
+        => new(Math.Max(0, size.Width - amount.Width), Math.Max(0, size.Height - amount.Height));
 
     public static Rect Shrink(this Rect rect, Size size)
         => new(rect.Location, rect.Size.Subtract(size));

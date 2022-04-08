@@ -66,7 +66,8 @@ public class SvgCanvas : ICanvas
 
     public ICanvas Draw(BrushStyle brushStyle, PenStyle penStyle, Geometry geometry)
     {
-        throw new NotImplementedException();
+        // TODO: draw none SVG elements
+        return this;
     }
 
     public Size MeasureText(StyledText text)
@@ -77,11 +78,13 @@ public class SvgCanvas : ICanvas
 
     public ICanvas SetRect(Rect rect)
     {
-        throw new NotImplementedException();
+        Text.AppendLine($"<g transform=\"translate({rect.Left} {rect.Top})\">");
+        return this;
     }
 
     public ICanvas PopRect()
     {
-        throw new NotImplementedException();
+        Text.AppendLine("</g>");
+        return this;
     }
 }

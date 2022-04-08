@@ -88,11 +88,12 @@ public static class ConnectingBehaviorExtensions
     public static double Sqr(double x)
         => x * x;
 
-    public static double DistanceSqr(Point a, Point b)
+    public static double DistanceSqr(this Point a, Point b)
         => Sqr(a.X - b.X) + Sqr(a.Y - b.Y);
 
-    public static double Distance(Point a, Point b)
+    public static double Distance(this Point a, Point b)
         => Math.Sqrt(DistanceSqr(a, b));
+
     public static bool CloseEnough(this SocketControl s, Point p)
         => Distance(s.AbsoluteCenter(), p) <= s.View.Style.ClickRadius;
 

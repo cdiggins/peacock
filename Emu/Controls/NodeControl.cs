@@ -30,5 +30,5 @@ public record NodeControl(Measures Measures, NodeView View, SlotControl Header, 
             .Draw(StyledShape());
 
     public override IEnumerable<IBehavior> GetDefaultBehaviors()
-        => new[] { new DraggingBehavior(this) };
+        => new IBehavior[] { new DraggingBehavior(this), new ResizingBehavior(this) };
 }
