@@ -4,6 +4,7 @@
 /// A default implementation of IBehavior that does nothing, and is intended to be used
 /// as a base class for other behaviors. 
 /// </summary>
+/// TODO: the "ControlId" is what again? Is it necessary? How is it used
 public record Behavior<TState>(object? ControlId) 
     : IBehavior
     where TState : new()

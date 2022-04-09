@@ -15,10 +15,6 @@ public record NodeView(Node Node, NodeStyle Style) : View(Node, Node.Id);
 public record NodeControl(Measures Measures, NodeView View, SlotControl Header, IReadOnlyList<SlotControl> Slots, Func<IUpdates, IControl, IControl, IUpdates> Callback) 
     : Control<NodeView>(Measures, View, Slots.Prepend(Header).ToList(), Callback)
 {
-    public StyledEllipse NodeShadow() => new(
-        new ShapeStyle(View.Style.ShadowColor, PenStyle.Empty),
-        new Ellipse(Client.BottomCenter(), new Radius(Size.HalfWidth() * 1.3, Size.HalfWidth() * 0.3)));
-
     public StyledRect StyledShape() 
         => new(View.Style.ShapeStyle, Shape());
 
@@ -26,9 +22,9 @@ public record NodeControl(Measures Measures, NodeView View, SlotControl Header, 
         => new(Client, View.Style.Radius);
 
     public override ICanvas Draw(ICanvas canvas)
-        => canvas.Draw(NodeShadow())
-            .Draw(StyledShape());
+        //=> canvas.Draw(StyledShape());
+        => canvas;
 
     public override IEnumerable<IBehavior> GetDefaultBehaviors()
-        => new IBehavior[] { new DraggingBehavior(this), new ResizingBehavior(this) };
+        => new IBehavior[] { new DraggingBehavior(this), new ResizingBehavior(this), new ShadowBehavior(this) };
 }
