@@ -32,6 +32,5 @@ public static class ModelUpdates
         => updates.ApplyToModel(node with
         {
             Slots = node.Slots.Select(slot => UpdateModel(updates, slot)).ToList(),
-            Header = UpdateModel(updates, node.Header),
         });
 }

@@ -274,7 +274,7 @@ Transform 2D
 
     public static Guid NewGuid() => Guid.NewGuid();
 
-    public static Slot CreateSlot(string s, string nodeName, bool isHeader)
+    public static Slot CreateSlot(string s, string nodeName)
     {
         s = s.Trim();
 
@@ -295,7 +295,7 @@ Transform 2D
 
         var leftSocket = hasLeftSocket ? new Socket(NewGuid(), type, true) : null;
         var rightSocket = hasRightSocket ? new Socket(NewGuid(), type, false) : null;
-        return new Slot(NewGuid(), name, type, isHeader, leftSocket, rightSocket);
+        return new Slot(NewGuid(), name, type, leftSocket, rightSocket);
     }
 
     public static Node CreateNode(Point pos, string s)
@@ -304,19 +304,21 @@ Transform 2D
     public static Node CreateNode(Point pos, List<string> contents)
     {
         var label = contents[0].Trim();
-        const NodeKind kind = NodeKind.OperatorSet;
+        contents = contents.Skip(1).ToList();
+        var kind = contents.FirstOrDefault() == "Value"
+            ? NodeKind.PropertySet
+            : NodeKind.OperatorSet;
 
-        var header = new Slot(Guid.NewGuid(), label, label, true, null, null);
         var slots = new List<Slot>();
         for (var i=0; i < contents.Count; ++i)
         {
             var c = contents[i];
-            var slot = CreateSlot(c, label, false);
+            var slot = CreateSlot(c, label);
             slots.Add(slot);
         }
 
         var rect = new Rect(pos, new Size(DefaultNodeWidth, DefaultNodeHeight(slots.Count)));
-        return new Node(NewGuid(), rect, label, kind, header, slots);
+        return new Node(NewGuid(), rect, label, kind, slots);
     }
 
     public static Graph CreateGraph()

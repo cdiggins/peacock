@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using System.Windows.Media.Imaging;
 using Peacock;
 
 namespace Emu;
@@ -17,9 +16,9 @@ public enum NodeKind
 
 public record Model(Guid Id) : IModel;
 
-public record Node(Guid Id, Rect Rect, string Label, NodeKind Kind, Slot Header, IReadOnlyList<Slot> Slots) : Model(Id);
+public record Node(Guid Id, Rect Rect, string Label, NodeKind Kind, IReadOnlyList<Slot> Slots) : Model(Id);
 
-public record Slot(Guid Id, string Label, string Type, bool IsHeader, Socket? Left, Socket? Right) : Model(Id);
+public record Slot(Guid Id, string Label, string Type, Socket? Left, Socket? Right) : Model(Id);
 
 public record Socket(Guid Id, string Type, bool LeftOrRight) : Model(Id);
 

@@ -8,7 +8,7 @@ using Peacock;
 
 namespace Emu.Controls;
 
-public record GraphStyle(ShapeStyle ShapeStyle, TextStyle TextStyle);
+public record GraphStyle(ShapeStyle ShapeStyle, TextStyle TextStyle, double GridDistance);
 
 public record GraphView(Graph Graph, GraphStyle Style) : View(Graph, Graph.Id);
 
@@ -44,6 +44,25 @@ public record GraphControl(GraphView View,
 
     public override ICanvas Draw(ICanvas canvas)
     {
+        var gridDistance = View.Style.GridDistance;
+
+        var client = new Rect(0, 0, 2000, 2000);
+
+        // Fill the background
+        canvas = canvas.Draw(new StyledRect(new ShapeStyle(Colors.Black, PenStyle.Empty), client));
+
+        // Draw vertical lines 
+        for (var i = gridDistance; i < client.Width; i += gridDistance)
+        {
+            canvas = canvas.Draw(new StyledLine(View.Style.ShapeStyle.PenStyle, new Line(new Point(i, 0), new Point(i, client.Height))));
+        }
+
+        // Draw horizontal lines 
+        for (var i = gridDistance; i < client.Height; i += gridDistance)
+        {
+            canvas = canvas.Draw(new StyledLine(View.Style.ShapeStyle.PenStyle, new Line(new Point(0, i), new Point(client.Width, i))));
+        }
+
         var socketPoints = this.GetSockets().ToDictionary(s => s.View.Model.Id, s => s.AbsoluteCenter());
         foreach (var c in View.Graph.Connections)
         {

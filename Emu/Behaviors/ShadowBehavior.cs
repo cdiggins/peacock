@@ -15,6 +15,5 @@ public record ShadowBehavior(object? ControlId)
 : Behavior<ShadowState>(ControlId)
 {
     public override ICanvas PreDraw(ICanvas canvas, IControl control)
-        => canvas.Draw(new StyledRect(new(State.Color, Colors.Transparent),
-            control.Measures.ClientRect.MoveBy(State.Offset)));
+        => canvas; //canvas.Draw(new StyledRect(new(State.Color, Colors.Transparent), control.Measures.ClientRect.MoveBy(State.Offset)));
 }

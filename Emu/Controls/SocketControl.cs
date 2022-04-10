@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows;
+using System.Windows.Media;
 using Peacock;
 
 namespace Emu.Controls;
@@ -11,7 +12,7 @@ public record SocketView(Socket Socket, SocketStyle Style) : View(Socket, Socket
 public record SocketControl(Measures Measures, SocketView View, Func<IUpdates, IControl, IControl, IUpdates> Callback) 
     : Control<SocketView>(Measures, View, Callback)
 {
-    public override ICanvas Draw(ICanvas canvas) 
+    public override ICanvas Draw(ICanvas canvas)
         => canvas.Draw(StyledShape());
 
     public StyledEllipse StyledShape() 

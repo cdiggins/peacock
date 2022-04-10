@@ -12,14 +12,7 @@ public record SlotControl(Measures Measures, SlotView View, SocketControl? Left,
     : Control<SlotView>(Measures, View, ToChildren(Left, Right), Callback)
 {
     public override ICanvas Draw(ICanvas canvas) 
-        => View.Slot.IsHeader 
-            ? canvas         
-                .Draw(StyledShape())
-                .Draw(StyledText())
-            : canvas
-                .Draw(StyledShape())
-                .Draw(StyledText())
-                .Draw(StyledTypeText());
+    => canvas.Draw(StyledShape()).Draw(StyledText());
 
     public StyledText StyledText() 
         => new(View.Style.TextStyle, Client.ShrinkAndOffset(TextOffset()), View.Slot.Label);

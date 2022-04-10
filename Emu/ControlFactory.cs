@@ -9,55 +9,75 @@ using Peacock;
 
 namespace Emu;
 
+// We like: borders. ANd borders around sockets. We don't love borders around slots.
+// WE want themes.
+// Flip text on and off.
+
 public record ControlFactory : IControlFactory
 {
-    public int NodeHeaderHeight { get; init; } = 25;
+    public double NodeHeaderMultiplier = 1.5;
     public int NodeSlotHeight { get; init; } = 20;
-    public int NodeWidth { get; init; } = 110;
-    public int SlotRadius { get; init; } = 5;
+    public int NodeWidth { get; init; } = 130;
+    public int SocketRadius { get; init; } = 5;
+    public int GridDistance = 40;
 
-    public static Color SocketPenColor(SocketView view)
-        => view.Socket.Type switch
+    public Color GetSocketColor(Socket socket)
+        => socket.Type switch
         {
             "Any" => Colors.ForestGreen,
             "Number" => Colors.Magenta,
             "Decimal" => Colors.Orange,
             "Array" => Colors.DodgerBlue,
-            "AbsoluteCenter 2D" => Colors.Firebrick,
+            "Point 2D" => Colors.Firebrick,
             "Size" => Colors.Firebrick,
             _ => Colors.DarkBlue,
         };
 
-    public static Color GetColor(NodeKind kind)
+    public Color GetNodeColor(NodeKind kind)
         => kind switch
         {
-            NodeKind.PropertySet => Colors.LightSeaGreen,
-            NodeKind.OperatorSet => Colors.DodgerBlue,
-            NodeKind.Input => Colors.Chocolate,
-            NodeKind.Output => Colors.Orange,
-            _ => Colors.Gray
+            NodeKind.PropertySet => Colors.Chartreuse,
+            NodeKind.OperatorSet => Colors.DeepPink,
+            NodeKind.Input => Colors.Yellow,
+            NodeKind.Output => Colors.Cyan,
+            _ => Colors.White
         };
 
-    public static TextStyle DefaultTextStyle = new(Colors.Black, "Segoe UI", 12, new(AlignmentX.Left, AlignmentY.Center));
+    public Color BackgroundColor = Colors.Black;
+    public Color GridColor = Color.FromRgb(0x33, 0x33, 0x33);
 
-    public static ShapeStyle DefaultShapeStyle = new(Colors.DarkSeaGreen, new(Colors.DarkOrange, 0.5));
+    public string Font => Fonts[3];
 
-    public static TextStyle DefaultHeaderTextStyle => DefaultTextStyle with { FontSize = 14, Alignment = Alignment.CenterCenter };
-    public static TextStyle DefaultSlotTextStyle => DefaultTextStyle with { FontSize = 12, Alignment = Alignment.LeftCenter };
-    public static TextStyle DefaultSlotTypeTextStyle => DefaultTextStyle with { FontSize = 8, Alignment = Alignment.RightTop };
-    public static TextStyle DefaultSocketTextStyle => DefaultTextStyle with { FontSize = 6, Alignment = Alignment.RightTop };
+    public string[] Fonts => new[]
+    {
+        "Verdana",
+        "Open Sans",
+        "Noto",
+        "Lato",
+        "Roboto",
+        "Segoe UI",
+        "Trebuchet MS",
+        "Barlow",
+        "Calibri",
+        "Gill Sans Nova"
+    };
 
-    public static NodeStyle DefaultNodeStyle => new(DefaultShapeStyle, DefaultTextStyle, 0, Color.FromArgb(0x66, 0x33, 0x33, 0x33));
-    public static SocketStyle DefaultSocketStyle => new(DefaultShapeStyle, DefaultSocketTextStyle, 6, 8); 
-    public static SlotStyle DefaultSlotStyle => new(DefaultShapeStyle, DefaultSlotTextStyle, DefaultSlotTypeTextStyle, 8);
-    public static SlotStyle DefaultHeaderStyle => new(DefaultShapeStyle, DefaultHeaderTextStyle, DefaultSlotTypeTextStyle, 8);
+    public TextStyle TextStyle => new(Colors.WhiteSmoke, Font, 16, new(AlignmentX.Left, AlignmentY.Center));
+    public TextStyle SlotTextStyle => TextStyle with { FontSize = 10, Alignment = Alignment.LeftCenter };
+    public TextStyle SlotTypeTextStyle => TextStyle with { FontSize = 8, Alignment = Alignment.RightTop };
+    public TextStyle SocketTextStyle => TextStyle with { FontSize = 6, Alignment = Alignment.RightTop };
 
-    public SocketStyle SocketStyle { get; init; } = DefaultSocketStyle;
-    public SlotStyle SlotStyle { get; init; } = DefaultSlotStyle;
-    public SlotStyle HeaderStyle { get; init; } = DefaultHeaderStyle;
-    public NodeStyle NodeStyle { get; init; } = DefaultNodeStyle;
-    
-    public GraphStyle GraphStyle { get; init; } = new(DefaultShapeStyle, DefaultTextStyle);
+    public GraphStyle GraphStyle
+        => new(new(BackgroundColor, GridColor), TextStyle, GridDistance);
+
+    public NodeStyle GetNodeStyle(Node node)
+        => new(new(BackgroundColor, GetNodeColor(node.Kind)), TextStyle, 0);
+
+    public SlotStyle GetSlotStyle(Slot slot)
+        => new(new(BackgroundColor, Colors.Transparent), SlotTextStyle, SocketTextStyle, 0);
+
+    public SocketStyle GetSocketStyle(Socket socket)
+        => new(new(GetSocketColor(socket), GetSocketColor(socket)), SocketTextStyle, SocketRadius, SocketRadius + 2);
 
     public IUpdates UpdateModel(IUpdates updates, IControl oldControl, IControl newControl)
         => newControl switch
@@ -72,7 +92,7 @@ public record ControlFactory : IControlFactory
                 // any other model change that another previously did. 
                 // What I really want is to compute the delta from the previous to the next,
                 // and that this function is responsible for applying the delta.
-                => updates.UpdateModel(nc.View.Node, model => nc.View.Node),
+                => updates.UpdateModel(nc.View.Node, _ => nc.View.Node),
 
             SlotControl sc
                 => updates,
@@ -89,27 +109,24 @@ public record ControlFactory : IControlFactory
             graph.Nodes.Select(Create).ToList(),
             UpdateModel);
 
-    public static Measures NodeMeasures(Node node)
+    public Measures NodeMeasures(Node node)
         => new(new Point(), node.Rect);
 
-    public static double HeaderHeight(Node node)
-        => SlotHeight(node);
+    public double HeaderHeight(Node node)
+        => SlotHeight(node) * NodeHeaderMultiplier;
 
-    public static double SlotHeight(Node node)
-        => node.Rect.Height / ((double)node.Slots.Count + 1);
+    public double SlotHeight(Node node)
+        => node.Rect.Height / (node.Slots.Count + NodeHeaderMultiplier);
 
-    public static Measures HeaderMeasures(Node node)
-        => NodeMeasures(node).Relative(new Size(node.Rect.Width, HeaderHeight(node)));
-
-    public static Rect SlotRect(Node node, int i)
+    public Rect SlotRect(Node node, int i)
         => new(new(0, HeaderHeight(node) + SlotHeight(node) * i),
             new Size(node.Rect.Width, SlotHeight(node)));
 
-    public static Measures SlotMeasures(Node node, int i)
+    public Measures SlotMeasures(Node node, int i)
         => NodeMeasures(node).Relative(SlotRect(node, i));
 
     public Rect SocketRect(Point point) 
-        => new(point.X - SlotRadius, point.Y - SlotRadius, SlotRadius * 2, SlotRadius * 2);
+        => new(point.X - SocketRadius, point.Y - SocketRadius, SocketRadius * 2, SocketRadius * 2);
     
     public Measures SocketMeasures(Socket socket, Measures slotMeasures)
         => socket.LeftOrRight
@@ -119,21 +136,20 @@ public record ControlFactory : IControlFactory
     public NodeControl Create(Node node)
         => new(
             NodeMeasures(node),
-            new(node, NodeStyle),
-            Create(node.Header, HeaderMeasures(node)),
+            new(node, GetNodeStyle(node)),
             node.Slots.Select((slot, i) => Create(slot, SlotMeasures(node, i))).ToList(), 
             UpdateModel);
 
     public SlotControl Create(Slot slot, Measures slotMeasures)
         => new(slotMeasures,
-            new(slot, slot.IsHeader ? HeaderStyle : SlotStyle),
+            new(slot, GetSlotStyle(slot)),
             Create(slot.Left, slotMeasures),
             Create(slot.Right, slotMeasures), UpdateModel);
 
     public SocketControl? Create(Socket? socket, Measures slotMeasures)
         => socket == null 
             ? null 
-            : new(SocketMeasures(socket, slotMeasures), new(socket, SocketStyle), UpdateModel);
+            : new(SocketMeasures(socket, slotMeasures), new(socket, GetSocketStyle(socket)), UpdateModel);
 
     public IEnumerable<IControl> Create(IModel model)
         => new[] { Create((Graph)model) };
