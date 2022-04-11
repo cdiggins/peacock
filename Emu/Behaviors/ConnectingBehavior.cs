@@ -79,7 +79,7 @@ public record ConnectingBehavior(object? ControlId) : Behavior<ConnectingState>(
 
     public override ICanvas PostDraw(ICanvas canvas, IControl control)
         => State.IsDragging
-            ? ((GraphControl)control).DrawConnector(canvas, State.SourcePoint, State.EndPoint)
+            ? ((GraphControl)control).DrawConnector(canvas, State.StartPoint, State.EndPoint)
             : base.PostDraw(canvas, control);
 }
 

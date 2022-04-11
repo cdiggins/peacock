@@ -24,7 +24,7 @@ public record GraphControl(Measures Measures,
     public static Geometry ConnectorGeometry(Point a, Point b)
     {
         var xDelta = Math.Abs(a.X - b.X);
-        var xDist = Math.Clamp(xDelta * 0.4, 75, double.MaxValue);
+        var xDist = Math.Clamp(xDelta * 0.4, 100, double.MaxValue);
         var controlPointA = a.Add(new Point(xDist, 0));
         var controlPointB = b.Subtract(new Point(xDist, 0));
         var segment1 = new BezierSegment
@@ -40,8 +40,10 @@ public record GraphControl(Measures Measures,
 
     // TODO: get the style from the style class. 
     public ICanvas DrawConnector(ICanvas canvas, Point a, Point b)
-        => canvas.Draw(new(Colors.Transparent), new(Colors.Blue, 4),
-                ConnectorGeometry(a, b));
+        => canvas
+        .Draw(new(Colors.Transparent), new(Colors.Black, 5), ConnectorGeometry(a, b))
+        .Draw(new(Colors.Transparent), new(Colors.Blue, 4), ConnectorGeometry(a, b))
+        ;
 
     public override ICanvas Draw(ICanvas canvas)
     {
