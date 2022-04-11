@@ -4,6 +4,12 @@ using System.Windows.Media;
 
 namespace Peacock;
 
+public enum FontWeight
+{
+    Normal,
+    Bold,
+}
+
 public record Alignment(AlignmentX X, AlignmentY Y)
 {
     public static Alignment LeftCenter => new(AlignmentX.Left, AlignmentY.Center);
@@ -32,7 +38,7 @@ public record PenStyle(BrushStyle BrushStyle, double Width)
     public static PenStyle Empty = Colors.Transparent;
 }
 
-public record TextStyle(BrushStyle BrushStyle, string FontFamily, double FontSize, Alignment Alignment);
+public record TextStyle(BrushStyle BrushStyle, string FontFamily, FontWeight Weight, double FontSize, Alignment Alignment);
 public record ShapeStyle(BrushStyle BrushStyle, PenStyle PenStyle);
 
 public record Line(Point A, Point B)

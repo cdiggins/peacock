@@ -15,38 +15,50 @@ namespace Emu;
 
 public record ControlFactory : IControlFactory
 {
-    public double NodeHeaderMultiplier = 1.5;
-    public int NodeSlotHeight { get; init; } = 20;
-    public int NodeWidth { get; init; } = 130;
-    public int SocketRadius { get; init; } = 5;
+    public static double NodeHeaderMultiplier = 1.2;
+    public int NodeSlotHeight => 16;
+    public int NodeWidth => 130;
+    public int SocketRadius => 5;
+
+    public double SlotTextOffset => 10;
+
+    public double BorderWidth => 1;
+
+    public int TabRadius => SocketRadius + 10;
+
     public int GridDistance = 40;
+    public bool ShowGrid = false;
+
+    // Socket colors? 
+    // Types: Compound, Simple (number/other), Array, Any.
 
     public Color GetSocketColor(Socket socket)
         => socket.Type switch
         {
-            "Any" => Colors.ForestGreen,
-            "Number" => Colors.Magenta,
-            "Decimal" => Colors.Orange,
-            "Array" => Colors.DodgerBlue,
-            "Point 2D" => Colors.Firebrick,
-            "Size" => Colors.Firebrick,
-            _ => Colors.DarkBlue,
+            "Angle" or "Boolean" or "Number" or "Decimal" 
+                => Color.FromRgb(0x6e, 0x0d, 0xd0),
+            "Array" => Colors.Cyan,
+            _ => Colors.Chartreuse,
         };
 
     public Color GetNodeColor(NodeKind kind)
         => kind switch
         {
             NodeKind.PropertySet => Colors.Chartreuse,
-            NodeKind.OperatorSet => Colors.DeepPink,
-            NodeKind.Input => Colors.Yellow,
-            NodeKind.Output => Colors.Cyan,
+            NodeKind.OperatorSet => Colors.Yellow,
+            NodeKind.Output => Colors.DeepPink,
+            NodeKind.Input => Colors.Cyan,
             _ => Colors.White
         };
 
     public Color BackgroundColor = Colors.Black;
     public Color GridColor = Color.FromRgb(0x33, 0x33, 0x33);
 
-    public string Font => Fonts[3];
+    //public string Font => "Lucida Sans";//  Fonts[7];
+    //public string Font => "Segoe UI";//  Fonts[7];
+    public string Font => "Century Gothic";//  Fonts[7];
+    //public string Font => @"Gill Sans Nova"; //  Fonts[7];
+    //public string Font => @"Roboto"; //  Fonts[7];
 
     public string[] Fonts => new[]
     {
@@ -61,23 +73,24 @@ public record ControlFactory : IControlFactory
         "Calibri",
         "Gill Sans Nova"
     };
+    public TextStyle TextStyle => new(Colors.WhiteSmoke, Font, Peacock.FontWeight.Normal, 10, new(AlignmentX.Center, AlignmentY.Center));
 
-    public TextStyle TextStyle => new(Colors.WhiteSmoke, Font, 16, new(AlignmentX.Left, AlignmentY.Center));
-    public TextStyle SlotTextStyle => TextStyle with { FontSize = 10, Alignment = Alignment.LeftCenter };
+    public TextStyle NodeTextStyle => TextStyle with { FontSize = 14, FontFamily = "Roboto", Weight = Peacock.FontWeight.Bold };
+    public TextStyle SlotTextStyle => TextStyle with { FontSize = 10, Alignment = Alignment.LeftCenter,  };
     public TextStyle SlotTypeTextStyle => TextStyle with { FontSize = 8, Alignment = Alignment.RightTop };
     public TextStyle SocketTextStyle => TextStyle with { FontSize = 6, Alignment = Alignment.RightTop };
 
     public GraphStyle GraphStyle
-        => new(new(BackgroundColor, GridColor), TextStyle, GridDistance);
+        => new(new(Color.FromRgb(0x22, 0x22, 0x22), GridColor), NodeTextStyle, GridDistance, ShowGrid);
 
     public NodeStyle GetNodeStyle(Node node)
-        => new(new(BackgroundColor, GetNodeColor(node.Kind)), TextStyle, 0);
+        => new(new(BackgroundColor, new(GetNodeColor(node.Kind), BorderWidth)), NodeTextStyle, 4);
 
-    public SlotStyle GetSlotStyle(Slot slot)
-        => new(new(BackgroundColor, Colors.Transparent), SlotTextStyle, SocketTextStyle, 0);
+    public SlotStyle GetSlotStyle(Node node, Slot slot)
+        => new(GetNodeStyle(node).ShapeStyle, SlotTextStyle, SocketTextStyle, 4, SlotTextOffset, TabRadius);
 
     public SocketStyle GetSocketStyle(Socket socket)
-        => new(new(GetSocketColor(socket), GetSocketColor(socket)), SocketTextStyle, SocketRadius, SocketRadius + 2);
+        => new(new(GetSocketColor(socket), new PenStyle(BackgroundColor, 2)), SocketTextStyle, SocketRadius, SocketRadius + 2);
 
     public IUpdates UpdateModel(IUpdates updates, IControl oldControl, IControl newControl)
         => newControl switch
@@ -104,29 +117,33 @@ public record ControlFactory : IControlFactory
                 => throw new NotImplementedException($"Unrecognized newControl {oldControl}")
         };
 
-    public GraphControl Create(Graph graph)
-        => new(new(graph, GraphStyle),
+    public GraphControl Create(Graph graph, Rect rect)
+        => new(new Measures(new Point(0,0), rect), new(
+            graph, GraphStyle),
             graph.Nodes.Select(Create).ToList(),
             UpdateModel);
 
     public Measures NodeMeasures(Node node)
         => new(new Point(), node.Rect);
 
-    public double HeaderHeight(Node node)
+    public static double HeaderHeight(Node node)
         => SlotHeight(node) * NodeHeaderMultiplier;
 
-    public double SlotHeight(Node node)
+    public static double SlotHeight(Node node)
         => node.Rect.Height / (node.Slots.Count + NodeHeaderMultiplier);
 
+    public double SlotXOffset => 14;
+
     public Rect SlotRect(Node node, int i)
-        => new(new(0, HeaderHeight(node) + SlotHeight(node) * i),
-            new Size(node.Rect.Width, SlotHeight(node)));
+        => new Rect(
+            new(0, HeaderHeight(node) + SlotHeight(node) * i), 
+            new Size(node.Rect.Width, SlotHeight(node))).ShrinkFromCenter(new(SlotXOffset, 0));
 
     public Measures SlotMeasures(Node node, int i)
         => NodeMeasures(node).Relative(SlotRect(node, i));
 
-    public Rect SocketRect(Point point) 
-        => new(point.X - SocketRadius, point.Y - SocketRadius, SocketRadius * 2, SocketRadius * 2);
+    public Rect SocketRect(Point point)
+        => point.ToSquareWithCenter(SocketRadius * 2);
     
     public Measures SocketMeasures(Socket socket, Measures slotMeasures)
         => socket.LeftOrRight
@@ -137,12 +154,12 @@ public record ControlFactory : IControlFactory
         => new(
             NodeMeasures(node),
             new(node, GetNodeStyle(node)),
-            node.Slots.Select((slot, i) => Create(slot, SlotMeasures(node, i))).ToList(), 
+            node.Slots.Select((slot, i) => Create(node, slot, SlotMeasures(node, i))).ToList(), 
             UpdateModel);
 
-    public SlotControl Create(Slot slot, Measures slotMeasures)
+    public SlotControl Create(Node node, Slot slot, Measures slotMeasures)
         => new(slotMeasures,
-            new(slot, GetSlotStyle(slot)),
+            new(slot, GetSlotStyle(node, slot)),
             Create(slot.Left, slotMeasures),
             Create(slot.Right, slotMeasures), UpdateModel);
 
@@ -151,7 +168,7 @@ public record ControlFactory : IControlFactory
             ? null 
             : new(SocketMeasures(socket, slotMeasures), new(socket, GetSocketStyle(socket)), UpdateModel);
 
-    public IEnumerable<IControl> Create(IModel model)
-        => new[] { Create((Graph)model) };
+    public IEnumerable<IControl> Create(IModel model, Rect rect)
+        => new[] { Create((Graph)model, rect) };
 
 }

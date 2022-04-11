@@ -8,14 +8,15 @@ using Peacock;
 
 namespace Emu.Controls;
 
-public record GraphStyle(ShapeStyle ShapeStyle, TextStyle TextStyle, double GridDistance);
+public record GraphStyle(ShapeStyle ShapeStyle, TextStyle TextStyle, double GridDistance, bool ShowGrid);
 
 public record GraphView(Graph Graph, GraphStyle Style) : View(Graph, Graph.Id);
 
-public record GraphControl(GraphView View,
+public record GraphControl(Measures Measures,
+    GraphView View,
     IReadOnlyList<NodeControl> Nodes,
     Func<IUpdates, IControl, IControl, IUpdates> Callback)
-    : Control<GraphView>(Measures.Default, View, Nodes, Callback)
+    : Control<GraphView>(Measures, View, Nodes, Callback)
 {
     public override IEnumerable<IBehavior> GetDefaultBehaviors()
         => new[] { new ConnectingBehavior(this) };
@@ -46,23 +47,25 @@ public record GraphControl(GraphView View,
     {
         var gridDistance = View.Style.GridDistance;
 
-        var client = new Rect(0, 0, 2000, 2000);
-
         // Fill the background
-        canvas = canvas.Draw(new StyledRect(new ShapeStyle(Colors.Black, PenStyle.Empty), client));
+        canvas = canvas.Draw(new StyledRect(View.Style.ShapeStyle, Client));
 
-        // Draw vertical lines 
-        for (var i = gridDistance; i < client.Width; i += gridDistance)
+        if (View.Style.ShowGrid)
         {
-            canvas = canvas.Draw(new StyledLine(View.Style.ShapeStyle.PenStyle, new Line(new Point(i, 0), new Point(i, client.Height))));
-        }
+            // Draw vertical lines 
+            for (var i = gridDistance; i < Client.Width; i += gridDistance)
+            {
+                canvas = canvas.Draw(new StyledLine(View.Style.ShapeStyle.PenStyle, 
+                    new Line(new Point(i, 0), new Point(i, Client.Height))));
+            }
 
-        // Draw horizontal lines 
-        for (var i = gridDistance; i < client.Height; i += gridDistance)
-        {
-            canvas = canvas.Draw(new StyledLine(View.Style.ShapeStyle.PenStyle, new Line(new Point(0, i), new Point(client.Width, i))));
+            // Draw horizontal lines 
+            for (var i = gridDistance; i < Client.Height; i += gridDistance)
+            {
+                canvas = canvas.Draw(new StyledLine(View.Style.ShapeStyle.PenStyle, 
+                    new Line(new Point(0, i), new Point(Client.Width, i))));
+            }
         }
-
         var socketPoints = this.GetSockets().ToDictionary(s => s.View.Model.Id, s => s.AbsoluteCenter());
         foreach (var c in View.Graph.Connections)
         {

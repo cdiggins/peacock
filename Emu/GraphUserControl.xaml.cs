@@ -53,7 +53,7 @@ public partial class GraphUserControl : UserControl
         Graph = TestData.CreateGraph();
         Factory = new ControlFactory();
         Manager = new ControlManager(Factory);
-        Manager.UpdateControlTree(Graph);
+        Manager.UpdateControlTree(Graph, new Rect(RenderSize));
 
         //(this.Parent as Window).PreviewKeyDown += (sender, args) => Console.WriteLine("Parent key press");
         PreviewKeyDown += (sender, args) => ProcessInput(new KeyDownEvent(args));
@@ -108,7 +108,7 @@ public partial class GraphUserControl : UserControl
         var updates = Manager.ProcessInput(inputEvent);
         Manager.ApplyChanges(updates);
         Graph = updates.UpdateModel(Graph);
-        Manager.UpdateControlTree(Graph);
+        Manager.UpdateControlTree(Graph, new Rect(new(), new Size(10000, 10000)));
         InvalidateVisual();
     }
 }

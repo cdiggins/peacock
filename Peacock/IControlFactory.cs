@@ -1,4 +1,6 @@
-﻿namespace Peacock;
+﻿using System.Windows;
+
+namespace Peacock;
 
 /// <summary>
 /// A model interface identifies data types as being used for the model,
@@ -18,5 +20,5 @@ public interface IModel
 /// </summary>
 public interface IControlFactory
 {
-    IEnumerable<IControl> Create(IModel model);
+    IEnumerable<IControl> Create(IModel model, Rect rect);
 }

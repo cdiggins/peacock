@@ -47,6 +47,7 @@ public record TextControl(TextView View, Measures Measures, Func<IUpdates, ICont
                 new TextStyle(
                     new BrushStyle(Colors.Black),
                     "Segoe UI",
+                    FontWeight.Normal,
                     10,
                     Alignment.LeftCenter),
                 Measures.AbsoluteRect,

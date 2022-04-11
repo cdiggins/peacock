@@ -305,9 +305,6 @@ Transform 2D
     {
         var label = contents[0].Trim();
         contents = contents.Skip(1).ToList();
-        var kind = contents.FirstOrDefault() == "Value"
-            ? NodeKind.PropertySet
-            : NodeKind.OperatorSet;
 
         var slots = new List<Slot>();
         for (var i=0; i < contents.Count; ++i)
@@ -316,6 +313,13 @@ Transform 2D
             var slot = CreateSlot(c, label);
             slots.Add(slot);
         }
+
+        var kind = slots[0].Label == "Value"
+            ? NodeKind.PropertySet
+            : NodeKind.OperatorSet;
+
+        if (!slots.Any(slot => slot.Left != null))
+            kind = NodeKind.Output;
 
         var rect = new Rect(pos, new Size(DefaultNodeWidth, DefaultNodeHeight(slots.Count)));
         return new Node(NewGuid(), rect, label, kind, slots);

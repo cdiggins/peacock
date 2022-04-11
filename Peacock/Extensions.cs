@@ -144,7 +144,7 @@ public static class Extensions
         => new(size.HalfWidth(), size.HalfHeight());
 
     public static Point Subtract(this Point p, Size size)
-        => new(p.X - size.Width, p.Y - size.Width);
+        => new(p.X - size.Width, p.Y - size.Height);
 
     public static Point CenterTopLeftOfSubarea(this Rect rect, Size size)
         => Center(rect).Subtract(Half(size));
@@ -176,12 +176,24 @@ public static class Extensions
 
     public static IEnumerable<T> WhereNotNull<T>(params T?[] self) where T : class
         => WhereNotNull<T>((IEnumerable<T?>)self);
+
+    public static Rect SetSize(this Rect rect, Size size)
+        => new(rect.TopLeft, size);
+
+    public static Rect SetHeight(this Rect rect, double height)
+        => rect.SetSize(new(rect.Width, height));
     
+    public static Rect SetWidth(this Rect rect, double width)
+        => rect.SetSize(new(width, rect.Height));
+
     public static Size Subtract(this Size size, Size amount)
         => new(Math.Max(0, size.Width - amount.Width), Math.Max(0, size.Height - amount.Height));
 
     public static Rect Shrink(this Rect rect, Size size)
         => new(rect.Location, rect.Size.Subtract(size));
+
+    public static Rect ShrinkFromCenter(this Rect rect, Size size)
+        => new(rect.Location.Add(size.Half()), rect.Size.Subtract(size));
 
     public static Rect Offset(this Rect rect, Size size)
         => new(rect.Location.Add(size), rect.Size);
@@ -200,4 +212,9 @@ public static class Extensions
 
     public static IReadOnlyList<T> Remove<T>(this IReadOnlyList<T> self, T item)
         => self.Where(x => x != null && !ReferenceEquals(x, item) && !x.Equals(item)).ToList();
+
+    public static Rect ToSquareWithCenter(this Point point, double side)
+        => new(point.X - side / 2, point.Y - side / 2, side, side);
+    public static Rect ToRect(this Point point, Size size)
+        => new(point, size);
 }

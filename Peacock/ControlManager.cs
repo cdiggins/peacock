@@ -1,4 +1,6 @@
-﻿namespace Peacock
+﻿using System.Windows;
+
+namespace Peacock
 {
     /// <summary>
     /// The ControlManager class contains the current control tree, which it creates from a control factory.
@@ -11,10 +13,10 @@
         public ControlManager(IControlFactory factory)
             => Factory = factory;
 
-        public void UpdateControlTree(IModel model, IControlFactory? newFactory = null)
+        public void UpdateControlTree(IModel model, Rect rect, IControlFactory? newFactory = null)
         {
             Factory = newFactory ?? Factory;
-            Controls = Factory.Create(model).ToList();
+            Controls = Factory.Create(model, rect).ToList();
             UpdateBehaviors();
         }
 

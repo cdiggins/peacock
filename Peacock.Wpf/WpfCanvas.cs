@@ -89,8 +89,20 @@ public record WpfCanvas : ICanvas
     public Pen GetPen(PenStyle style)
         => GetOrCreate(Pens, style, style => new(GetBrush(style.BrushStyle), style.Width));
 
+    public System.Windows.FontWeight GetWindowsFontWeight(TextStyle style)
+        => style.Weight == FontWeight.Bold ? FontWeights.Bold : FontWeights.Regular;
+
+    public System.Windows.FontStyle GetWindowsFontStyle(TextStyle style)
+        => FontStyles.Normal;
+    public FontStretch GetWindowsFontStretch(TextStyle style)
+        => FontStretches.Normal;
+
+    public FontFamily GetWindowsFontFamily(TextStyle style)
+        => new FontFamily(style.FontFamily);
+
     public Typeface GetTypeface(TextStyle style)
-        => GetOrCreate(Typefaces, style, style => new(style.FontFamily));
+        => GetOrCreate(Typefaces, style, style => new(GetWindowsFontFamily(style), GetWindowsFontStyle(style),
+            GetWindowsFontWeight(style), GetWindowsFontStretch(style)));
 
     public FormattedText ToFormattedText(StyledText text)
         => new(text.Text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, GetTypeface(text.Style),
