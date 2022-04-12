@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Emu": {
+      "commandName": "Project",
+      "commandLineArgs": "asdasd"
+    }
+  }
+}

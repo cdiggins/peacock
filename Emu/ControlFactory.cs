@@ -127,10 +127,10 @@ public record ControlFactory : IControlFactory
         => new(new Point(), node.Rect);
 
     public static double HeaderHeight(Node node)
-        => SlotHeight(node) * NodeHeaderMultiplier;
+        => node.HasHeader() ? SlotHeight(node) * NodeHeaderMultiplier : 0;
 
     public static double SlotHeight(Node node)
-        => node.Rect.Height / (node.Slots.Count + NodeHeaderMultiplier);
+        => node.Rect.Height / (node.Slots.Count + (node.HasHeader() ? NodeHeaderMultiplier : 0));
 
     public double SlotXOffset => 14;
 

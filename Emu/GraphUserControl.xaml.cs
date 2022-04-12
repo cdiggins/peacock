@@ -49,6 +49,7 @@ public partial class GraphUserControl : UserControl
         InitializeComponent();
         Focusable = true;
         Focus();
+        Loaded += (s, e) => Keyboard.Focus(this);
 
         Graph = TestData.CreateGraph();
         Factory = new ControlFactory();
@@ -56,19 +57,26 @@ public partial class GraphUserControl : UserControl
         Manager.UpdateControlTree(Graph, new Rect(RenderSize));
 
         //(this.Parent as Window).PreviewKeyDown += (sender, args) => Console.WriteLine("Parent key press");
-        PreviewKeyDown += (sender, args) => ProcessInput(new KeyDownEvent(args));
+        PreviewKeyDown += (sender, args) 
+            => ProcessInput(new KeyDownEvent(args));
         PreviewKeyUp += (sender, args) => ProcessInput(new KeyUpEvent(args));
         PreviewMouseDoubleClick += (sender, args) => ProcessInput(new MouseDoubleClickEvent(args));
-        PreviewMouseDown += (sender, args) => ProcessInput(new MouseDownEvent(args));
+        PreviewMouseDown += (sender, args) 
+            => ProcessInput(new MouseDownEvent(args));
         PreviewMouseUp += (sender, args) => ProcessInput(new MouseUpEvent(args));
         PreviewMouseMove += (sender, args) => ProcessInput(new MouseMoveEvent(args));
         PreviewMouseWheel += (sender, args) => ProcessInput(new MouseWheelEvent(args));
         SizeChanged += (sender, args) => ProcessInput(new ResizeEvent(args));
-            
-        // Animation timer
+        
+        PreviewTextInput += (sender, args) => 
+            ProcessInput(new TextInputEvent(args));
+
+        // Animation timer  
         Timer.Tick += (sender, args) => ProcessInput(new ClockEvent((DateTimeOffset.Now - Started).TotalSeconds));
         Timer.Start();
         Started = DateTimeOffset.Now;
+
+        Keyboard.Focus(this);
     }
 
     protected override void OnRender(DrawingContext drawingContext)

@@ -249,10 +249,32 @@ Transform 2D
     public static double DefaultSlotHeight = 20;
     public static double DefaultHeaderHeight = DefaultSlotHeight * 1.5;
 
+    public static Node CreateEditNode(Rect rect)
+    {
+        return new Node(
+            Guid.NewGuid(),
+            rect,
+            "3.141592",
+            NodeKind.SimpleTextEdit,
+            new[] { new Slot
+            (
+                Guid.NewGuid(),
+                "3.141592",
+                "Number",
+                null,
+                new Socket(NewGuid(), "Number", false),
+                true
+            ) }
+        );
+    }
+
     public static IReadOnlyList<Node> CreateNodes(string s)
     {
-
         var nodes = new List<Node>();
+
+        var rect = new Rect(20, 20, DefaultNodeWidth, DefaultSlotHeight);
+        nodes.Add(CreateEditNode(rect));
+
         const int rows = 3;
         foreach (var subString in s.Split("--").Where(x => !string.IsNullOrWhiteSpace(x)))
         {
@@ -274,7 +296,7 @@ Transform 2D
 
     public static Guid NewGuid() => Guid.NewGuid();
 
-    public static Slot CreateSlot(string s, string nodeName)
+    public static Slot CreateSlot(string s, string nodeName, bool edit = false)
     {
         s = s.Trim();
 
@@ -295,7 +317,7 @@ Transform 2D
 
         var leftSocket = hasLeftSocket ? new Socket(NewGuid(), type, true) : null;
         var rightSocket = hasRightSocket ? new Socket(NewGuid(), type, false) : null;
-        return new Slot(NewGuid(), name, type, leftSocket, rightSocket);
+        return new Slot(NewGuid(), name, type, leftSocket, rightSocket, edit);
     }
 
     public static Node CreateNode(Point pos, string s)

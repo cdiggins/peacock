@@ -28,8 +28,9 @@ public record NodeControl(Measures Measures, NodeView View, IReadOnlyList<SlotCo
         => new(Client, View.Style.Radius);
 
     public override ICanvas Draw(ICanvas canvas)
-        //=> canvas.Draw(StyledShape()).Draw(StyledText());
-        => canvas.Draw(StyledShape()).Draw(Header()).Draw(StyledText());
+        => View.Node.Kind == NodeKind.SimpleTextEdit
+            ? canvas.Draw(StyledShape())
+            : canvas.Draw(StyledShape()).Draw(Header()).Draw(StyledText());
 
     public RoundedRect HeaderShape()
         => new(HeaderRect(), View.Style.Radius);

@@ -12,13 +12,14 @@ public enum NodeKind
     OperatorSet,
     Input,
     Output,
+    SimpleTextEdit
 }
 
 public record Model(Guid Id) : IModel;
 
 public record Node(Guid Id, Rect Rect, string Label, NodeKind Kind, IReadOnlyList<Slot> Slots) : Model(Id);
 
-public record Slot(Guid Id, string Label, string Type, Socket? Left, Socket? Right) : Model(Id);
+public record Slot(Guid Id, string Label, string Type, Socket? Left, Socket? Right, bool Edit) : Model(Id);
 
 public record Socket(Guid Id, string Type, bool LeftOrRight) : Model(Id);
 
@@ -31,4 +32,7 @@ public static class ModelExtensions
 {
     public static Graph AddConnection(this Graph graph, Guid a, Guid b)
         => graph with { Connections = graph.Connections.Append(new Connection(Guid.NewGuid(), a, b)).ToList() };
+
+    public static bool HasHeader(this Node node)
+        => node.Kind != NodeKind.SimpleTextEdit;
 }

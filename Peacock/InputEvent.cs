@@ -24,6 +24,7 @@ public record InputEvent : IInputEvent
     public IMouseStatus MouseStatus { get; set; }
 }
 
+public record TextInputEvent(TextCompositionEventArgs Args) : InputEvent;
 public record KeyDownEvent(KeyEventArgs Args) : InputEvent;
 public record KeyUpEvent(KeyEventArgs Args) : InputEvent;
 public record MouseDoubleClickEvent(MouseButtonEventArgs Args) : InputEvent;
