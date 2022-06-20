@@ -7,9 +7,9 @@ namespace Peacock;
 /// </summary>
 public record Control<TView>(
     Measures Measures,
-    TView View, 
-    IReadOnlyList<IControl> Children, 
-    Func<IUpdates, IControl, IControl, IUpdates> Callback) : IControl 
+    TView View,
+    IReadOnlyList<IControl> Children,
+    Func<IUpdates, IControl, IControl, IUpdates> Callback) : IControl
     where TView : IView
 {
     public Control(Measures measures, TView view, Func<IUpdates, IControl, IControl, IUpdates> Callback)
@@ -29,8 +29,12 @@ public record Control<TView>(
 
     public static IControl Default = new EmptyControl();
 
+    // TODO: move this into an extension
     public Rect Relative => Measures.RelativeRect;
     public Rect Absolute => Measures.AbsoluteRect;
     public Rect Client => Measures.ClientRect;
     public Size Size => Measures.Size;
+    public IUpdates UpdateView(IUpdates updates, Func<TView, TView> func)
+        => updates.UpdateControl(this, (IControl ctrl) => (Control<TView>)ctrl with { View = func(((Control<TView>)ctrl).View) });
 }
+

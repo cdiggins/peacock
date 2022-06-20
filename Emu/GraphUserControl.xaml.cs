@@ -66,8 +66,7 @@ public partial class GraphUserControl : UserControl
         PreviewMouseUp += (sender, args) => ProcessInput(new MouseUpEvent(args));
         PreviewMouseMove += (sender, args) => ProcessInput(new MouseMoveEvent(args));
         PreviewMouseWheel += (sender, args) => ProcessInput(new MouseWheelEvent(args));
-        SizeChanged += (sender, args) => ProcessInput(new ResizeEvent(args));
-        
+        SizeChanged += (sender, args) => ProcessInput(new ResizeEvent(args));     
         PreviewTextInput += (sender, args) => 
             ProcessInput(new TextInputEvent(args));
 

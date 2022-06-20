@@ -7,6 +7,7 @@ namespace Peacock;
 // This could be generated from the Window system or from parent component 
 public interface IInputEvent
 {
+    IMouseStatus MouseStatus { get; }
 }
 
 // Keyboard, mouse, touch, file system, other 
